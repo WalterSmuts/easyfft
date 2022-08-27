@@ -2,6 +2,7 @@
 // https://github.com/rust-lang/rust/issues/76560
 #![allow(incomplete_features)]
 #![feature(generic_const_exprs)]
+#![doc = include_str!("../README.md")]
 
 use realfft::{ComplexToReal, RealToComplex};
 use realfft::{FftNum, RealFftPlanner};
