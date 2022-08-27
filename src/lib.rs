@@ -17,23 +17,23 @@ mod type_restriction;
 use type_restriction::ConstCheck;
 use type_restriction::True;
 
-pub trait EvenOrOdd {}
+pub trait Parity {}
 #[derive(Debug)]
-struct EvenDft;
+struct Even;
 #[derive(Debug)]
-struct OddDft;
+struct Odd;
 
 // TODO: Define constructor for creating this type manually
 #[derive(Debug)]
-pub struct RealDft<T, const SIZE: usize, U: EvenOrOdd> {
+pub struct RealDft<T, const SIZE: usize, U: Parity> {
     inner: [Complex<T>; SIZE],
     phantom: PhantomData<U>,
 }
 
-impl EvenOrOdd for EvenDft {}
-impl EvenOrOdd for OddDft {}
+impl Parity for Even {}
+impl Parity for Odd {}
 
-impl<T, const SIZE: usize, U: EvenOrOdd> Deref for RealDft<T, SIZE, U> {
+impl<T, const SIZE: usize, U: Parity> Deref for RealDft<T, SIZE, U> {
     type Target = [Complex<T>; SIZE];
 
     fn deref(&self) -> &Self::Target {
@@ -42,13 +42,13 @@ impl<T, const SIZE: usize, U: EvenOrOdd> Deref for RealDft<T, SIZE, U> {
 }
 
 // TODO: Figure out how to restrict user to make invalid modifications
-impl<T, const SIZE: usize, U: EvenOrOdd> DerefMut for RealDft<T, SIZE, U> {
+impl<T, const SIZE: usize, U: Parity> DerefMut for RealDft<T, SIZE, U> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.inner
     }
 }
 
-pub trait RealFft<T, const SIZE: usize, U: EvenOrOdd> {
+pub trait RealFft<T, const SIZE: usize, U: Parity> {
     fn real_fft(&self) -> RealDft<T, { SIZE / 2 + 1 }, U>;
 }
 
@@ -66,11 +66,11 @@ pub trait Ifft<T, const SIZE: usize> {
     fn ifft(&self) -> [Complex<T>; SIZE];
 }
 
-impl<T: FftNum + Default, const SIZE: usize> RealFft<T, SIZE, EvenDft> for [T; SIZE]
+impl<T: FftNum + Default, const SIZE: usize> RealFft<T, SIZE, Even> for [T; SIZE]
 where
     ConstCheck<{ SIZE % 2 == 0 }>: True,
 {
-    fn real_fft(&self) -> RealDft<T, { SIZE / 2 + 1 }, EvenDft> {
+    fn real_fft(&self) -> RealDft<T, { SIZE / 2 + 1 }, Even> {
         let r2c = get_real_fft_algorithm::<T, SIZE>();
 
         // TODO: Remove default dependency and unnesasary initialization
@@ -101,11 +101,11 @@ impl<T: FftNum + Default, const SIZE: usize> Fft<T, SIZE> for [T; SIZE] {
     }
 }
 
-impl<T: FftNum + Default, const SIZE: usize> RealFft<T, SIZE, OddDft> for [T; SIZE]
+impl<T: FftNum + Default, const SIZE: usize> RealFft<T, SIZE, Odd> for [T; SIZE]
 where
     ConstCheck<{ SIZE % 2 == 1 }>: True,
 {
-    fn real_fft(&self) -> RealDft<T, { SIZE / 2 + 1 }, OddDft> {
+    fn real_fft(&self) -> RealDft<T, { SIZE / 2 + 1 }, Odd> {
         let r2c = get_real_fft_algorithm::<T, SIZE>();
 
         // TODO: Remove unnesasary initialization
@@ -143,7 +143,7 @@ fn get_inverse_fft_algorithm<T: FftNum, const SIZE: usize>() -> Arc<dyn rustfft:
 }
 
 impl<T: FftNum + Default, const SIZE: usize> RealIfft<T, SIZE, { (SIZE - 1) * 2 }>
-    for RealDft<T, SIZE, EvenDft>
+    for RealDft<T, SIZE, Even>
 {
     type Output = T;
 
@@ -158,7 +158,7 @@ impl<T: FftNum + Default, const SIZE: usize> RealIfft<T, SIZE, { (SIZE - 1) * 2 
 }
 
 impl<T: FftNum + Default, const SIZE: usize> RealIfft<T, SIZE, { (SIZE - 1) * 2 + 1 }>
-    for RealDft<T, SIZE, OddDft>
+    for RealDft<T, SIZE, Odd>
 {
     type Output = T;
 
