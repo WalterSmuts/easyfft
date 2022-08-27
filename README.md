@@ -34,5 +34,5 @@ errors.
 [FFT]: https://en.wikipedia.org/wiki/Fast_Fourier_transform
 [rustfft]: https://docs.rs/rustfft/latest/rustfft/
 [realfft]: https://docs.rs/realfft/latest/realfft/
-[arrays]: https://doc.rust-lang.org/std/primitive.array.html://docs.rs/realfft/0.3.0/realfft/
+[arrays]: https://doc.rust-lang.org/std/primitive.array.html
 [generic_const_exprs]: https://github.com/rust-lang/rust/issues/76560
