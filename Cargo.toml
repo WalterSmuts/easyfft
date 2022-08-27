@@ -1,8 +1,15 @@
 [package]
 name = "constfft"
 version = "0.1.0"
+authors = ["Walter Smuts <smuts.walter@gmail.com>"]
 edition = "2021"
 license = "MIT OR Apache-2.0"
+description = "A library crate providing an FFT API for arrays"
+documentation = "https://docs.rs/constfft/"
+repository = "https://github.com/WalterSmuts/constfft"
+keywords = ["fft", "dft", "discrete", "fourier", "const-generics"]
+categories = ["algorithms", "compression", "multimedia::encoding", "science", "mathematics"]
+readme = "README.md"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
