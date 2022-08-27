@@ -17,7 +17,7 @@ mod type_restriction;
 use type_restriction::ConstCheck;
 use type_restriction::True;
 
-trait EvenOrOdd {}
+pub trait EvenOrOdd {}
 #[derive(Debug)]
 struct EvenDft;
 #[derive(Debug)]
@@ -25,7 +25,7 @@ struct OddDft;
 
 // TODO: Define constructor for creating this type manually
 #[derive(Debug)]
-struct RealDft<T, const SIZE: usize, U: EvenOrOdd> {
+pub struct RealDft<T, const SIZE: usize, U: EvenOrOdd> {
     inner: [Complex<T>; SIZE],
     phantom: PhantomData<U>,
 }
@@ -48,21 +48,21 @@ impl<T, const SIZE: usize, U: EvenOrOdd> DerefMut for RealDft<T, SIZE, U> {
     }
 }
 
-trait RealFft<T, const SIZE: usize, U: EvenOrOdd> {
+pub trait RealFft<T, const SIZE: usize, U: EvenOrOdd> {
     fn real_fft(&self) -> RealDft<T, { SIZE / 2 + 1 }, U>;
 }
 
-trait Fft<T, const SIZE: usize> {
+pub trait Fft<T, const SIZE: usize> {
     fn fft(&self) -> [Complex<T>; SIZE];
 }
 
-trait RealIfft<T, const SIZE: usize, const OUTPUT_SIZE: usize> {
+pub trait RealIfft<T, const SIZE: usize, const OUTPUT_SIZE: usize> {
     type Output;
 
     fn real_ifft(&self) -> [Self::Output; OUTPUT_SIZE];
 }
 
-trait Ifft<T, const SIZE: usize> {
+pub trait Ifft<T, const SIZE: usize> {
     fn ifft(&self) -> [Complex<T>; SIZE];
 }
 
