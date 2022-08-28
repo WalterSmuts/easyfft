@@ -5,9 +5,12 @@
 #![deny(missing_docs)]
 #![doc = include_str!("../README.md")]
 
-use realfft::{ComplexToReal, RealToComplex};
-use realfft::{FftNum, RealFftPlanner};
-use rustfft::{num_complex::Complex, FftPlanner};
+use realfft::ComplexToReal;
+use realfft::FftNum;
+use realfft::RealFftPlanner;
+use realfft::RealToComplex;
+use rustfft::num_complex::Complex;
+use rustfft::FftPlanner;
 use std::marker::PhantomData;
 use std::ops::Deref;
 use std::ops::DerefMut;
