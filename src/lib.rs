@@ -2,7 +2,6 @@
 // https://github.com/rust-lang/rust/issues/76560
 #![allow(incomplete_features)]
 #![feature(generic_const_exprs)]
-#![deny(missing_docs)]
 #![doc = include_str!("../README.md")]
 
 use realfft::{ComplexToReal, RealToComplex};
@@ -25,9 +24,9 @@ use type_restriction::True;
 /// Internally `constfft` implements [Parity] for an `Even` and `Odd` marker `struct`.
 pub trait Parity {}
 #[derive(Debug)]
-struct Even;
+pub struct Even;
 #[derive(Debug)]
-struct Odd;
+pub struct Odd;
 
 // TODO: Define constructor for creating this type manually
 /// The result of calling [RealFft::real_fft].
@@ -102,15 +101,12 @@ pub trait Fft<T, const SIZE: usize> {
 /// A trait for performing fast IDFT's on structs representing real signals with a size known at
 /// compile time.
 pub trait RealIfft<T, const SIZE: usize, const OUTPUT_SIZE: usize> {
-    /// The underlying type of the elements of the signal.
-    type Output;
-
     /// Perform a real-valued FFT on a signal with input size `SIZE` and output size depending on
     /// the parity of the input.
     ///
     /// If the input is tagged with 'Even' parity then the output size will be `(SIZE - 1) * 2`.
     /// If the input is tagged with 'Odd' parity then the output size will be `(SIZE - 1) * 2 + 1`.
-    fn real_ifft(&self) -> [Self::Output; OUTPUT_SIZE];
+    fn real_ifft(&self) -> [T; OUTPUT_SIZE];
 }
 
 /// A trait for performing fast IDFT's on structs representing complex signals with a size known at
@@ -199,9 +195,7 @@ fn get_inverse_fft_algorithm<T: FftNum, const SIZE: usize>() -> Arc<dyn rustfft:
 impl<T: FftNum + Default, const SIZE: usize> RealIfft<T, SIZE, { (SIZE - 1) * 2 }>
     for RealDft<T, SIZE, Even>
 {
-    type Output = T;
-
-    fn real_ifft(&self) -> [Self::Output; (SIZE - 1) * 2] {
+    fn real_ifft(&self) -> [T; (SIZE - 1) * 2] {
         let c2r = get_inverse_real_fft_algorithm::<T, { (SIZE - 1) * 2 }>();
 
         // TODO: Remove default dependency and unnesasary initialization
@@ -214,9 +208,7 @@ impl<T: FftNum + Default, const SIZE: usize> RealIfft<T, SIZE, { (SIZE - 1) * 2 
 impl<T: FftNum + Default, const SIZE: usize> RealIfft<T, SIZE, { (SIZE - 1) * 2 + 1 }>
     for RealDft<T, SIZE, Odd>
 {
-    type Output = T;
-
-    fn real_ifft(&self) -> [Self::Output; (SIZE - 1) * 2 + 1] {
+    fn real_ifft(&self) -> [T; (SIZE - 1) * 2 + 1] {
         let c2r = get_inverse_real_fft_algorithm::<T, { (SIZE - 1) * 2 + 1 }>();
 
         // TODO: Remove default dependency and unnesasary initialization
