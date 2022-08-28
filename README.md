@@ -11,7 +11,7 @@ signal at compile time.
 ### Current limitations
 * Requires nightly because it uses the [generic_const_exprs] feature
 * No caching of the intermediate context/structs required to do the fft calculation
-* Even/Odd bounds don't seem to propogate back up the call chain (TODO: Add
+* Even/Odd bounds don't seem to propagate back up the call chain (TODO: Add
   example and link to rust issue)
 * No implementation for slices
 
