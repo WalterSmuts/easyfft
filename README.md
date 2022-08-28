@@ -5,7 +5,7 @@ Use `constfft` if you're working with [arrays], i.e. you know the size of the
 signal at compile time.
 
 ### Advantages
-* If it compiles, your code **won't panic™** in this library\*
+* If it compiles, your code **won't panic™** in this library[^panic]
 * Ergonomic API
 
 ### Current limitations
@@ -22,7 +22,7 @@ work with and AFAICT does not depend on the types to be arrays. If this is the
 case I'd implement the same API on slices and rename this crate to `easyfft`.
 
 #### Footnotes
-\* While this could be true in theory, in practice it most probably is not.
+[^panic]: While this could be true in theory, in practice it most probably is not.
 Currently you can create a `RealDft` struct and mutate it using the `DerefMut`
 trait in a way that the `real_ifft` method will cause a panic. This should be
 fixable in a future patch release currently pending implementation details.
