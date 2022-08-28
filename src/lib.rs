@@ -299,3 +299,13 @@ mod tests {
         }
     }
 }
+
+#[cfg(test)]
+mod example_tests {
+    #[test]
+    fn same_as_example() {
+        use super::RealFft;
+        use super::RealIfft;
+        [1.0_f64; 3].real_fft().real_ifft();
+    }
+}
