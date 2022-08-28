@@ -14,7 +14,6 @@ signal at compile time.
 * Even/Odd bounds don't seem to propogate back up the call chain (TODO: Add
   example and link to rust issue)
 * No implementation for slices
-* Very little documentation
 
 ### Possible future plans
 Currently I don't see any reason why the same API (minus the compile time size
