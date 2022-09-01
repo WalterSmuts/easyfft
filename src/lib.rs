@@ -1,10 +1,11 @@
 #![deny(missing_docs)]
 #![doc = include_str!("../README.md")]
 
-use rustfft::num_complex::Complex;
-use rustfft::FftNum;
 use rustfft::FftPlanner;
 use std::sync::Arc;
+
+pub use rustfft::num_complex::Complex;
+pub use rustfft::FftNum;
 
 /// A trait for performing fast DFT's on structs representing complex signals with a size known at
 /// compile time.
