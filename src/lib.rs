@@ -1,4 +1,5 @@
 #![deny(missing_docs)]
+#![deny(clippy::undocumented_unsafe_blocks)]
 #![doc = include_str!("../README.md")]
 
 use rustfft::FftPlanner;
@@ -23,15 +24,19 @@ pub trait Ifft<T, const SIZE: usize> {
 
 impl<T: FftNum + Default, const SIZE: usize> Fft<T, SIZE> for [T; SIZE] {
     fn fft(&self) -> [Complex<T>; SIZE] {
-        // TODO: Remove unnesasary initialization
-        let mut buffer: [Complex<T>; SIZE] = [Complex::default(); SIZE];
+        // SAFETY:
+        // The function will only return None if the iterator is exhausted before the array
+        // is filled. The compiler ensures that the size of this array is always equal to the size
+        // of the array passed in, and therefore the size of the iterator, by the SIZE const
+        // generic argument. Therefore this function will never return a None value.
+        let mut buffer: [Complex<T>; SIZE] = unsafe {
+            array_init::from_iter(
+                self.iter()
+                    .map(|sample| Complex::new(*sample, T::default())),
+            )
+            .unwrap_unchecked()
+        };
 
-        let vec: Vec<_> = self
-            .iter()
-            .map(|sample| Complex::new(*sample, T::default()))
-            .collect();
-
-        buffer.copy_from_slice(vec.as_slice());
         get_fft_algorithm::<T, SIZE>().process(&mut buffer);
         buffer
     }
