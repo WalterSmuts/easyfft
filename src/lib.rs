@@ -37,12 +37,10 @@ impl<T: FftNum + Default, const SIZE: usize> Fft<T, SIZE> for [T; SIZE] {
     }
 }
 
-impl<T: FftNum + Default, const SIZE: usize> Fft<T, SIZE> for [Complex<T>; SIZE] {
+impl<T: FftNum, const SIZE: usize> Fft<T, SIZE> for [Complex<T>; SIZE] {
     fn fft(&self) -> [Complex<T>; SIZE] {
-        // TODO: Remove unnesasary initialization
-        let mut buffer: [Complex<T>; SIZE] = [Complex::default(); SIZE];
-
-        buffer.copy_from_slice(self.as_slice());
+        // Copy into a new buffer
+        let mut buffer: [Complex<T>; SIZE] = *self;
         get_fft_algorithm::<T, SIZE>().process(&mut buffer);
         buffer
     }
