@@ -18,10 +18,10 @@ fn main() {
     // Call `.fft` on the signal to obtain it's discrete fourier transform
     let real_signal_dft: [Complex<f64>; 10] = real_signal.fft();
 
-    // Call `.ifft` on the ifft signal to obtain it's inverse
+    // Call `.ifft` on the frequency domain signal to obtain it's inverse
     let real_signal_dft_idft: [Complex<f64>; 10] = real_signal_dft.ifft();
 
-    // Verify the resulting ifft is a scaled value of the original fft
+    // Verify the resulting signal is a scaled value of the original signal
     for (original, manipulated) in real_signal.iter().zip(real_signal_dft_idft) {
         assert_ulps_eq!(manipulated.re, original * real_signal.len() as f64);
         assert_ulps_eq!(manipulated.im, 0.0);
@@ -33,10 +33,10 @@ fn main() {
     // Call `.fft` on the signal to obtain it's discrete fourier transform
     let complex_signal_dft: [Complex<f64>; 10] = complex_signal.fft();
 
-    // Call `.ifft` on the ifft signal to obtain it's inverse
+    // Call `.ifft` on the frequency domain signal to obtain it's inverse
     let complex_signal_dft_idft: [Complex<f64>; 10] = complex_signal_dft.ifft();
 
-    // Verify the resulting ifft is a scaled value of the original fft
+    // Verify the resulting signal is a scaled value of the original signal
     for (original, manipulated) in complex_signal.iter().zip(complex_signal_dft_idft) {
         assert_ulps_eq!(manipulated.re, original.re * complex_signal.len() as f64);
         assert_ulps_eq!(manipulated.im, original.im * complex_signal.len() as f64);
