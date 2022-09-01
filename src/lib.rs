@@ -37,6 +37,17 @@ impl<T: FftNum + Default, const SIZE: usize> Fft<T, SIZE> for [T; SIZE] {
     }
 }
 
+impl<T: FftNum + Default, const SIZE: usize> Fft<T, SIZE> for [Complex<T>; SIZE] {
+    fn fft(&self) -> [Complex<T>; SIZE] {
+        // TODO: Remove unnesasary initialization
+        let mut buffer: [Complex<T>; SIZE] = [Complex::default(); SIZE];
+
+        buffer.copy_from_slice(self.as_slice());
+        get_fft_algorithm::<T, SIZE>().process(&mut buffer);
+        buffer
+    }
+}
+
 // TODO: Add a cache
 fn get_fft_algorithm<T: FftNum, const SIZE: usize>() -> Arc<dyn rustfft::Fft<T>> {
     FftPlanner::<T>::new().plan_fft_forward(SIZE)
