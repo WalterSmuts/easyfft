@@ -2,7 +2,10 @@
 #![deny(clippy::undocumented_unsafe_blocks)]
 #![doc = include_str!("../README.md")]
 
+use anymap::AnyMap;
 use rustfft::FftPlanner;
+use std::cell::RefCell;
+use std::rc::Rc;
 use std::sync::Arc;
 
 pub use rustfft::num_complex::Complex;
@@ -51,14 +54,34 @@ impl<T: FftNum, const SIZE: usize> Fft<T, SIZE> for [Complex<T>; SIZE] {
     }
 }
 
-// TODO: Add a cache
-fn get_fft_algorithm<T: FftNum, const SIZE: usize>() -> Arc<dyn rustfft::Fft<T>> {
-    FftPlanner::<T>::new().plan_fft_forward(SIZE)
+// TODO: Consider using UnsafeCell to avoid runtime borrow-checking.
+fn get_fft_planner<T: FftNum>() -> Rc<RefCell<FftPlanner<T>>> {
+    thread_local! {
+        static FFT_PLANNER_MAP: RefCell<AnyMap> = RefCell::new(AnyMap::new());
+    };
+    FFT_PLANNER_MAP.with(|map_cell| {
+        let mut map = map_cell.borrow_mut();
+        if !map.contains::<Rc<RefCell<FftPlanner<T>>>>() {
+            map.insert(Rc::new(RefCell::new(FftPlanner::<T>::new())));
+        }
+        // SAFETY:
+        // The function will only return None if the item is not present. Since we always add the
+        // item if it's not present two lines above and never remove items, we can be sure that
+        // this function will always return `Some`.
+        unsafe {
+            map.get::<Rc<RefCell<FftPlanner<T>>>>()
+                .unwrap_unchecked()
+                .clone()
+        }
+    })
 }
 
-// TODO: Add a cache
+fn get_fft_algorithm<T: FftNum, const SIZE: usize>() -> Arc<dyn rustfft::Fft<T>> {
+    get_fft_planner().borrow_mut().plan_fft_forward(SIZE)
+}
+
 fn get_inverse_fft_algorithm<T: FftNum, const SIZE: usize>() -> Arc<dyn rustfft::Fft<T>> {
-    FftPlanner::<T>::new().plan_fft_inverse(SIZE)
+    get_fft_planner().borrow_mut().plan_fft_inverse(SIZE)
 }
 
 impl<T: FftNum + Default, const SIZE: usize> Ifft<T, SIZE> for [Complex<T>; SIZE] {
