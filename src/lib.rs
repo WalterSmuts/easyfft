@@ -2,10 +2,8 @@
 #![deny(clippy::undocumented_unsafe_blocks)]
 #![doc = include_str!("../README.md")]
 
-use anymap::AnyMap;
 use rustfft::FftPlanner;
 use std::cell::RefCell;
-use std::rc::Rc;
 use std::sync::Arc;
 
 pub use rustfft::num_complex::Complex;
@@ -54,34 +52,42 @@ impl<T: FftNum, const SIZE: usize> Fft<T, SIZE> for [Complex<T>; SIZE] {
     }
 }
 
-// TODO: Consider using UnsafeCell to avoid runtime borrow-checking.
-fn get_fft_planner<T: FftNum>() -> Rc<RefCell<FftPlanner<T>>> {
-    thread_local! {
-        static FFT_PLANNER_MAP: RefCell<AnyMap> = RefCell::new(AnyMap::new());
-    };
-    FFT_PLANNER_MAP.with(|map_cell| {
-        let mut map = map_cell.borrow_mut();
-        if !map.contains::<Rc<RefCell<FftPlanner<T>>>>() {
-            map.insert(Rc::new(RefCell::new(FftPlanner::<T>::new())));
-        }
-        // SAFETY:
-        // The function will only return None if the item is not present. Since we always add the
-        // item if it's not present two lines above and never remove items, we can be sure that
-        // this function will always return `Some`.
-        unsafe {
-            map.get::<Rc<RefCell<FftPlanner<T>>>>()
-                .unwrap_unchecked()
-                .clone()
-        }
-    })
+mod generic_singleton {
+    use anymap::AnyMap;
+    use std::cell::RefCell;
+    use std::rc::Rc;
+
+    // TODO: Consider using UnsafeCell to avoid runtime borrow-checking.
+    // TODO: Do unsafe cast to 'static since we know we never remove items from the map. This
+    // should remove the need for the Rc.
+    pub fn get_or_init<T: 'static>(init: fn() -> T) -> Rc<T> {
+        thread_local! {
+            static REF_CELL_MAP: RefCell<AnyMap> = RefCell::new(AnyMap::new());
+        };
+        REF_CELL_MAP.with(|map_cell| {
+            let mut map = map_cell.borrow_mut();
+            if !map.contains::<Rc<T>>() {
+                map.insert(Rc::new(init()));
+            }
+            // SAFETY:
+            // The function will only return None if the item is not present. Since we always add the
+            // item if it's not present two lines above and never remove items, we can be sure that
+            // this function will always return `Some`.
+            unsafe { map.get::<Rc<T>>().unwrap_unchecked().clone() }
+        })
+    }
 }
 
 fn get_fft_algorithm<T: FftNum, const SIZE: usize>() -> Arc<dyn rustfft::Fft<T>> {
-    get_fft_planner().borrow_mut().plan_fft_forward(SIZE)
+    generic_singleton::get_or_init(|| RefCell::new(FftPlanner::new()))
+        .borrow_mut()
+        .plan_fft_forward(SIZE)
 }
 
 fn get_inverse_fft_algorithm<T: FftNum, const SIZE: usize>() -> Arc<dyn rustfft::Fft<T>> {
-    get_fft_planner().borrow_mut().plan_fft_inverse(SIZE)
+    generic_singleton::get_or_init(|| RefCell::new(FftPlanner::new()))
+        .borrow_mut()
+        .plan_fft_inverse(SIZE)
 }
 
 impl<T: FftNum + Default, const SIZE: usize> Ifft<T, SIZE> for [Complex<T>; SIZE] {
