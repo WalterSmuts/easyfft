@@ -49,7 +49,6 @@ fn main() {
 * Ergonomic API
 
 ### Current limitations
-* No caching of the intermediate context/structs required to do the fft calculation
 * No implementation for slices
 * No implementation for `real_[i]fft`: [issue][real_fft_issue]
 
