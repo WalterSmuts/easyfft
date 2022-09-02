@@ -56,6 +56,10 @@ mod generic_singleton {
     use anymap::AnyMap;
     use std::cell::RefCell;
 
+    /// Get a static reference to a generic singleton or initialize it if it doesn't exist.
+    ///
+    /// # Panics
+    /// Initialization will panic if the init function calls get_or_init during initialization.
     pub fn get_or_init<T: 'static>(init: fn() -> T) -> &'static T {
         // TODO: Consider using UnsafeCell to avoid runtime borrow-checking.
         thread_local! {
