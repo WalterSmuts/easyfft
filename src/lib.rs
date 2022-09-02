@@ -30,6 +30,9 @@ impl<T: FftNum + Default, const SIZE: usize> Fft<T, SIZE> for [T; SIZE] {
         // is filled. The compiler ensures that the size of this array is always equal to the size
         // of the array passed in, and therefore the size of the iterator, by the SIZE const
         // generic argument. Therefore this function will never return a None value.
+        //
+        // TODO: Remove this and call `map_array_init` once this commit gets released:
+        // https://github.com/Manishearth/array-init/commit/9496096148b4933416a2435de65b9fa844872127
         let mut buffer: [Complex<T>; SIZE] = unsafe {
             array_init::from_iter(
                 self.iter()
