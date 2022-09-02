@@ -55,35 +55,58 @@ impl<T: FftNum, const SIZE: usize> Fft<T, SIZE> for [Complex<T>; SIZE] {
 mod generic_singleton {
     use anymap::AnyMap;
     use std::cell::RefCell;
-    use std::rc::Rc;
 
-    // TODO: Consider using UnsafeCell to avoid runtime borrow-checking.
-    // TODO: Do unsafe cast to 'static since we know we never remove items from the map. This
-    // should remove the need for the Rc.
-    pub fn get_or_init<T: 'static>(init: fn() -> T) -> Rc<T> {
+    pub fn get_or_init<T: 'static>(init: fn() -> T) -> &'static T {
+        // TODO: Consider using UnsafeCell to avoid runtime borrow-checking.
         thread_local! {
             static REF_CELL_MAP: RefCell<AnyMap> = RefCell::new(AnyMap::new());
         };
         REF_CELL_MAP.with(|map_cell| {
             let mut map = map_cell.borrow_mut();
-            if !map.contains::<Rc<T>>() {
-                map.insert(Rc::new(init()));
+            if !map.contains::<T>() {
+                map.insert(init());
             }
             // SAFETY:
             // The function will only return None if the item is not present. Since we always add the
             // item if it's not present two lines above and never remove items, we can be sure that
             // this function will always return `Some`.
-            unsafe { map.get::<Rc<T>>().unwrap_unchecked().clone() }
+            let t_ref = unsafe { map.get::<T>().unwrap_unchecked() };
+            let ptr = t_ref as *const T;
+            // SAFETY:
+            // Check: The pointer must be properly aligned.
+            // Proof: The pointer is obtained from a valid reference so it must be aligned.
+            //
+            // Check: It must be “dereferenceable” in the sense defined in the module documentation.
+            // Proof: The pointer is obtained from a valid reference it musts be dereferenceable.
+            //
+            // Check: The pointer must point to an initialized instance of T.
+            // Proof: The AnyMap crate provides this guarantee.
+            //
+            // Check: You must enforce Rust’s aliasing rules, since the returned lifetime 'a is
+            //        arbitrarily chosen and does not necessarily reflect the actual lifetime of the data.
+            //        In particular, while this reference exists, the memory the pointer points to
+            //        must not get mutated (except inside UnsafeCell).
+            // Proof: We return a shared reference and therefore cannot be mutated unless T is
+            //        guarded with the normal rust memory protection constructs using UnsafeCell.
+            //        The data could be dropped if we ever removed it from this map however. Care
+            //        must be taken to never introduce any logic that would remove T from the map.
+            let optional_ref = unsafe { ptr.as_ref() };
+            // SAFETY:
+            // This requires the pointer not to be null. We obtained the pointer one line above
+            // from a valid reference, therefore this is considered safe to do.
+            unsafe { optional_ref.unwrap_unchecked() }
         })
     }
 }
 
+// TODO: Consider using UnsafeCell to avoid runtime borrow-checking.
 fn get_fft_algorithm<T: FftNum, const SIZE: usize>() -> Arc<dyn rustfft::Fft<T>> {
     generic_singleton::get_or_init(|| RefCell::new(FftPlanner::new()))
         .borrow_mut()
         .plan_fft_forward(SIZE)
 }
 
+// TODO: Consider using UnsafeCell to avoid runtime borrow-checking.
 fn get_inverse_fft_algorithm<T: FftNum, const SIZE: usize>() -> Arc<dyn rustfft::Fft<T>> {
     generic_singleton::get_or_init(|| RefCell::new(FftPlanner::new()))
         .borrow_mut()
