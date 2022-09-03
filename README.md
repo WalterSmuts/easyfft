@@ -58,8 +58,8 @@ fn main() {
 #![feature(generic_const_exprs)]
 
 use approx::assert_ulps_eq;
-use constfft::RealFft;
-use constfft::RealIfft;
+use constfft::realfft::RealFft;
+use constfft::realfft::RealIfft;
 
 fn main() {
     // Define a real-valued signal
