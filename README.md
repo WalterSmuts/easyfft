@@ -9,8 +9,9 @@ signal at compile time.
 * Ergonomic API
 
 ### Current limitations
-* Requires nightly because it uses the [generic_const_exprs] feature
 * No implementation for slices
+* The `realfft' feature requires the 'nightly' compiler because it depends on
+  the [generic_const_exprs] feature
 
 ### Complex Signal Example:
 ```rust
@@ -53,28 +54,7 @@ fn main() {
 ```
 
 ### Real Signal Example:
-```rust
-#![allow(incomplete_features)]
-#![feature(generic_const_exprs)]
-
-use approx::assert_ulps_eq;
-use constfft::realfft::RealFft;
-use constfft::realfft::RealIfft;
-
-fn main() {
-    // Define a real-valued signal
-    let real_signal = [1.0_f64; 10];
-    // Call `.real_fft()` on the signal to obtain it's discrete fourier transform
-    let real_signal_dft = real_signal.real_fft();
-    // Call `.real_ifft` on the RealDft signal to obtain it's real inverse
-    let real_signal_dft_idft: [f64; 10] = real_signal_dft.real_ifft();
-
-    // Verify the resulting ifft is a scaled version of the original signal
-    for (original, manipulated) in real_signal.iter().zip(real_signal_dft_idft) {
-        assert_ulps_eq!(manipulated, original * 10.0);
-    }
-}
-```
+See [crate::realfft] level documentation.
 
 ### Possible future plans
 Currently I don't see any reason why the same API (minus the compile time size

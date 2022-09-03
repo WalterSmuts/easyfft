@@ -1,10 +1,10 @@
 // TODO: Remove once feature hits stable:
 // https://github.com/rust-lang/rust/issues/76560
-#![allow(incomplete_features)]
-#![feature(generic_const_exprs)]
 #![deny(missing_docs)]
 #![deny(clippy::undocumented_unsafe_blocks)]
 #![doc = include_str!("../README.md")]
+#![cfg_attr(feature = "realfft", allow(incomplete_features))]
+#![cfg_attr(feature = "realfft", feature(generic_const_exprs))]
 
 use rustfft::FftPlanner;
 use std::cell::RefCell;
@@ -13,6 +13,7 @@ use std::sync::Arc;
 pub use rustfft::num_complex::Complex;
 pub use rustfft::FftNum;
 
+#[cfg(feature = "realfft")]
 pub mod realfft;
 
 /// A trait for performing fast DFT's on structs representing complex signals with a size known at
