@@ -33,7 +33,7 @@
 //! ```
 //! [`generic_const_exprs`]: https://github.com/rust-lang/rust/issues/76560
 
-use crate::generic_singleton;
+use crate::PrivateWrapper;
 use realfft::ComplexToReal;
 use realfft::RealFftPlanner;
 use realfft::RealToComplex;
@@ -174,15 +174,17 @@ where
 
 // TODO: Consider using UnsafeCell to avoid runtime borrow-checking.
 fn get_real_fft_algorithm<T: FftNum, const SIZE: usize>() -> Arc<dyn RealToComplex<T>> {
-    generic_singleton::get_or_init(|| RefCell::new(RealFftPlanner::new()))
+    generic_singleton::get_or_init(|| RefCell::new(PrivateWrapper(RealFftPlanner::new())))
         .borrow_mut()
+        .0
         .plan_fft_forward(SIZE)
 }
 
 // TODO: Consider using UnsafeCell to avoid runtime borrow-checking.
 fn get_inverse_real_fft_algorithm<T: FftNum, const SIZE: usize>() -> Arc<dyn ComplexToReal<T>> {
-    generic_singleton::get_or_init(|| RefCell::new(RealFftPlanner::new()))
+    generic_singleton::get_or_init(|| RefCell::new(PrivateWrapper(RealFftPlanner::new())))
         .borrow_mut()
+        .0
         .plan_fft_inverse(SIZE)
 }
 #[cfg(test)]
