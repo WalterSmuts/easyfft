@@ -16,6 +16,7 @@ readme = "README.md"
 [dependencies]
 anymap = "0.12.1"
 array-init = "2.0.1"
+realfft = "3.0.1"
 rustfft = "6.0.1"
 typemap = "0.3.3"
 
