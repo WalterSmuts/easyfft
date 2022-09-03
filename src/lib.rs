@@ -11,30 +11,12 @@ use realfft::RealFftPlanner;
 use realfft::RealToComplex;
 use rustfft::FftPlanner;
 use std::cell::RefCell;
-use std::marker::PhantomData;
 use std::ops::Deref;
 use std::ops::DerefMut;
 use std::sync::Arc;
 
 pub use rustfft::num_complex::Complex;
 pub use rustfft::FftNum;
-
-// TODO: Move to using const_guards once issue is resolved:
-// https://github.com/Mari-W/const_guards/issues/4
-mod type_restriction;
-use type_restriction::ConstCheck;
-use type_restriction::True;
-
-/// Parity is a property possessed by a number and can either be `Even` or `Odd`.
-///
-/// `Even` parity is defined by `N % 2 == 0` and `Odd` parity is defined by `N % 2 == 0`.
-/// Internally `constfft` implements [Parity] for an `Even` and `Odd` marker `struct`.
-pub trait Parity {}
-#[derive(Debug)]
-struct Even;
-#[derive(Debug)]
-struct Odd;
-
 // TODO: Define constructor for creating this type manually
 /// The result of calling [RealFft::real_fft].
 ///
@@ -51,9 +33,7 @@ struct Odd;
 ///
 /// The solution is to wrap the array in a different type which contains extra type information.
 /// This newly created type is the [RealDft] and has the same memory representation as our original
-/// type, but is blessed with the knowledge of its origins. Specifically it contains a [phantom
-/// type] parameterized by a [Parity]. This lets the compiler figure out which variant of
-/// [RealIfft::real_ifft] to use to calculate the IDFT.
+/// type, but is blessed with the knowledge of its origins.
 ///
 ///
 /// ### Caution!
@@ -68,16 +48,18 @@ struct Odd;
 /// [know to be symmetric]: https://en.wikipedia.org/wiki/Discrete_Fourier_transform#DFT_of_real_and_purely_imaginary_signals
 /// [phantom type]: https://doc.rust-lang.org/rust-by-example/generics/phantom.html
 #[derive(Debug)]
-pub struct RealDft<T, const SIZE: usize, U: Parity> {
-    inner: [Complex<T>; SIZE],
-    phantom: PhantomData<U>,
+pub struct RealDft<T, const SIZE: usize>
+where
+    [T; SIZE / 2 + 1]: Sized,
+{
+    inner: [Complex<T>; SIZE / 2 + 1],
 }
 
-impl Parity for Even {}
-impl Parity for Odd {}
-
-impl<T, const SIZE: usize, U: Parity> Deref for RealDft<T, SIZE, U> {
-    type Target = [Complex<T>; SIZE];
+impl<T, const SIZE: usize> Deref for RealDft<T, SIZE>
+where
+    [T; SIZE / 2 + 1]: Sized,
+{
+    type Target = [Complex<T>; SIZE / 2 + 1];
 
     fn deref(&self) -> &Self::Target {
         &self.inner
@@ -85,7 +67,10 @@ impl<T, const SIZE: usize, U: Parity> Deref for RealDft<T, SIZE, U> {
 }
 
 // TODO: Figure out how to restrict user to make invalid modifications
-impl<T, const SIZE: usize, U: Parity> DerefMut for RealDft<T, SIZE, U> {
+impl<T, const SIZE: usize> DerefMut for RealDft<T, SIZE>
+where
+    [T; SIZE / 2 + 1]: Sized,
+{
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.inner
     }
@@ -93,9 +78,12 @@ impl<T, const SIZE: usize, U: Parity> DerefMut for RealDft<T, SIZE, U> {
 
 /// A trait for performing fast DFT's on structs representing real signals with a size known at
 /// compile time.
-pub trait RealFft<T, const SIZE: usize, U: Parity> {
+pub trait RealFft<T, const SIZE: usize>
+where
+    [T; SIZE / 2 + 1]: Sized,
+{
     /// Perform a real-valued FFT on a signal with input size `SIZE` and output size `SIZE / 2 + 1`.
-    fn real_fft(&self) -> RealDft<T, { SIZE / 2 + 1 }, U>;
+    fn real_fft(&self) -> RealDft<T, SIZE>;
 }
 
 /// A trait for performing fast DFT's on structs representing complex signals with a size known at
@@ -107,16 +95,9 @@ pub trait Fft<T, const SIZE: usize> {
 
 /// A trait for performing fast IDFT's on structs representing real signals with a size known at
 /// compile time.
-pub trait RealIfft<T, const SIZE: usize, const OUTPUT_SIZE: usize> {
-    /// The underlying type of the elements of the signal.
-    type Output;
-
-    /// Perform a real-valued FFT on a signal with input size `SIZE` and output size depending on
-    /// the parity of the input.
-    ///
-    /// If the input is tagged with 'Even' parity then the output size will be `(SIZE - 1) * 2`.
-    /// If the input is tagged with 'Odd' parity then the output size will be `(SIZE - 1) * 2 + 1`.
-    fn real_ifft(&self) -> [Self::Output; OUTPUT_SIZE];
+pub trait RealIfft<T, const SIZE: usize> {
+    /// Perform a real-valued IFFT on a signal which originally had input size `SIZE`.
+    fn real_ifft(&self) -> [T; SIZE];
 }
 
 /// A trait for performing fast IDFT's on structs representing complex signals with a size known at
@@ -126,11 +107,11 @@ pub trait Ifft<T, const SIZE: usize> {
     fn ifft(&self) -> [Complex<T>; SIZE];
 }
 
-impl<T: FftNum + Default, const SIZE: usize> RealFft<T, SIZE, Even> for [T; SIZE]
+impl<T: FftNum + Default, const SIZE: usize> RealFft<T, SIZE> for [T; SIZE]
 where
-    ConstCheck<{ SIZE % 2 == 0 }>: True,
+    [T; SIZE / 2 + 1]: Sized,
 {
-    fn real_fft(&self) -> RealDft<T, { SIZE / 2 + 1 }, Even> {
+    fn real_fft(&self) -> RealDft<T, SIZE> {
         let r2c = get_real_fft_algorithm::<T, SIZE>();
 
         // TODO: Remove default dependency and unnesasary initialization
@@ -138,10 +119,7 @@ where
 
         // TODO: remove this clone
         r2c.process(&mut self.clone(), &mut output).unwrap();
-        RealDft {
-            inner: output,
-            phantom: PhantomData,
-        }
+        RealDft { inner: output }
     }
 }
 
@@ -174,25 +152,6 @@ impl<T: FftNum, const SIZE: usize> Fft<T, SIZE> for [Complex<T>; SIZE] {
         let mut buffer: [Complex<T>; SIZE] = *self;
         get_fft_algorithm::<T, SIZE>().process(&mut buffer);
         buffer
-    }
-}
-
-impl<T: FftNum + Default, const SIZE: usize> RealFft<T, SIZE, Odd> for [T; SIZE]
-where
-    ConstCheck<{ SIZE % 2 == 1 }>: True,
-{
-    fn real_fft(&self) -> RealDft<T, { SIZE / 2 + 1 }, Odd> {
-        let r2c = get_real_fft_algorithm::<T, SIZE>();
-
-        // TODO: Remove unnesasary initialization
-        let mut output = [Complex::default(); SIZE / 2 + 1];
-
-        // TODO: remove this clone
-        r2c.process(&mut self.clone(), &mut output).unwrap();
-        RealDft {
-            inner: output,
-            phantom: PhantomData,
-        }
     }
 }
 
@@ -273,31 +232,15 @@ fn get_inverse_real_fft_algorithm<T: FftNum, const SIZE: usize>() -> Arc<dyn Com
     real_planner.plan_fft_inverse(SIZE)
 }
 
-impl<T: FftNum + Default, const SIZE: usize> RealIfft<T, SIZE, { (SIZE - 1) * 2 }>
-    for RealDft<T, SIZE, Even>
+impl<T: FftNum + Default, const SIZE: usize> RealIfft<T, SIZE> for RealDft<T, SIZE>
+where
+    [T; SIZE / 2 + 1]: Sized,
 {
-    type Output = T;
-
-    fn real_ifft(&self) -> [Self::Output; (SIZE - 1) * 2] {
-        let c2r = get_inverse_real_fft_algorithm::<T, { (SIZE - 1) * 2 }>();
+    fn real_ifft(&self) -> [T; SIZE] {
+        let c2r = get_inverse_real_fft_algorithm::<T, SIZE>();
 
         // TODO: Remove default dependency and unnesasary initialization
-        let mut output = [T::default(); { (SIZE - 1) * 2 }];
-        c2r.process(&mut (*self).clone(), &mut output).unwrap();
-        output
-    }
-}
-
-impl<T: FftNum + Default, const SIZE: usize> RealIfft<T, SIZE, { (SIZE - 1) * 2 + 1 }>
-    for RealDft<T, SIZE, Odd>
-{
-    type Output = T;
-
-    fn real_ifft(&self) -> [Self::Output; (SIZE - 1) * 2 + 1] {
-        let c2r = get_inverse_real_fft_algorithm::<T, { (SIZE - 1) * 2 + 1 }>();
-
-        // TODO: Remove default dependency and unnesasary initialization
-        let mut output = [T::default(); { (SIZE - 1) * 2 + 1 }];
+        let mut output = [T::default(); SIZE];
         c2r.process(&mut (*self).clone(), &mut output).unwrap();
         output
     }
