@@ -4,6 +4,14 @@ A Rust library crate providing an [FFT] API for arrays. This crate wraps the
 Use `constfft` if you're working with [arrays], i.e. you know the size of the
 signal at compile time.
 
+### Advantages
+* If it compiles, your code **won't panic™** in this library[^panic]
+* Ergonomic API
+
+### Current limitations
+* Requires nightly because it uses the [generic_const_exprs] feature
+* No implementation for slices
+
 ### Complex Signal Example:
 ```rust
 use approx::assert_ulps_eq;
@@ -67,14 +75,6 @@ fn main() {
     }
 }
 ```
-
-### Advantages
-* If it compiles, your code **won't panic™** in this library[^panic]
-* Ergonomic API
-
-### Current limitations
-* Requires nightly because it uses the [generic_const_exprs] feature
-* No implementation for slices
 
 ### Possible future plans
 Currently I don't see any reason why the same API (minus the compile time size
