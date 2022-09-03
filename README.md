@@ -4,7 +4,7 @@ A Rust library crate providing an [FFT] API for arrays. This crate wraps the
 Use `constfft` if you're working with [arrays], i.e. you know the size of the
 signal at compile time.
 
-# Complex Signal Example:
+### Complex Signal Example:
 ```rust
 use approx::assert_ulps_eq;
 use constfft::Complex;
@@ -44,7 +44,7 @@ fn main() {
 }
 ```
 
-# Real Signal Example:
+### Real Signal Example:
 ```rust
 #![allow(incomplete_features)]
 #![feature(generic_const_exprs)]
