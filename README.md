@@ -11,7 +11,7 @@ signal at compile time.
 
 ### Current limitations
 * No implementation for slices
-* The `realfft' feature requires the 'nightly' compiler because it depends on
+* The `realfft` feature requires the `nightly` compiler because it depends on
   the [generic_const_exprs] feature
 
 ### Complex Signal Example:
