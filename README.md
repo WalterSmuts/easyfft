@@ -21,36 +21,34 @@ use constfft::Complex;
 use constfft::Fft;
 use constfft::Ifft;
 
-fn main() {
-    // Define a real-valued signal
-    let real_signal = [1.0_f64; 10];
+// Define a real-valued signal
+let real_signal = [1.0_f64; 10];
 
-    // Call `.fft` on the signal to obtain it's discrete fourier transform
-    let real_signal_dft: [Complex<f64>; 10] = real_signal.fft();
+// Call `.fft` on the signal to obtain it's discrete fourier transform
+let real_signal_dft: [Complex<f64>; 10] = real_signal.fft();
 
-    // Call `.ifft` on the frequency domain signal to obtain it's inverse
-    let real_signal_dft_idft: [Complex<f64>; 10] = real_signal_dft.ifft();
+// Call `.ifft` on the frequency domain signal to obtain it's inverse
+let real_signal_dft_idft: [Complex<f64>; 10] = real_signal_dft.ifft();
 
-    // Verify the resulting signal is a scaled value of the original signal
-    for (original, manipulated) in real_signal.iter().zip(real_signal_dft_idft) {
-        assert_ulps_eq!(manipulated.re, original * real_signal.len() as f64);
-        assert_ulps_eq!(manipulated.im, 0.0);
-    }
+// Verify the resulting signal is a scaled value of the original signal
+for (original, manipulated) in real_signal.iter().zip(real_signal_dft_idft) {
+    assert_ulps_eq!(manipulated.re, original * real_signal.len() as f64);
+    assert_ulps_eq!(manipulated.im, 0.0);
+}
 
-    // Define a complex-valued signal
-    let complex_signal = [Complex::new(1.0_f64, 0.0); 10];
+// Define a complex-valued signal
+let complex_signal = [Complex::new(1.0_f64, 0.0); 10];
 
-    // Call `.fft` on the signal to obtain it's discrete fourier transform
-    let complex_signal_dft: [Complex<f64>; 10] = complex_signal.fft();
+// Call `.fft` on the signal to obtain it's discrete fourier transform
+let complex_signal_dft: [Complex<f64>; 10] = complex_signal.fft();
 
-    // Call `.ifft` on the frequency domain signal to obtain it's inverse
-    let complex_signal_dft_idft: [Complex<f64>; 10] = complex_signal_dft.ifft();
+// Call `.ifft` on the frequency domain signal to obtain it's inverse
+let complex_signal_dft_idft: [Complex<f64>; 10] = complex_signal_dft.ifft();
 
-    // Verify the resulting signal is a scaled value of the original signal
-    for (original, manipulated) in complex_signal.iter().zip(complex_signal_dft_idft) {
-        assert_ulps_eq!(manipulated.re, original.re * complex_signal.len() as f64);
-        assert_ulps_eq!(manipulated.im, original.im * complex_signal.len() as f64);
-    }
+// Verify the resulting signal is a scaled value of the original signal
+for (original, manipulated) in complex_signal.iter().zip(complex_signal_dft_idft) {
+    assert_ulps_eq!(manipulated.re, original.re * complex_signal.len() as f64);
+    assert_ulps_eq!(manipulated.im, original.im * complex_signal.len() as f64);
 }
 ```
 
