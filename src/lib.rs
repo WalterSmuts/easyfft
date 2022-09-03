@@ -62,7 +62,7 @@ impl<T: FftNum, const SIZE: usize> Fft<T, SIZE> for [Complex<T>; SIZE] {
     }
 }
 
-mod generic_singleton {
+pub(crate) mod generic_singleton {
     use anymap::AnyMap;
     use std::cell::RefCell;
 

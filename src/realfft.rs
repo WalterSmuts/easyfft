@@ -33,11 +33,13 @@
 //! ```
 //! [`generic_const_exprs`]: https://github.com/rust-lang/rust/issues/76560
 
+use crate::generic_singleton;
 use realfft::ComplexToReal;
 use realfft::RealFftPlanner;
 use realfft::RealToComplex;
 use rustfft::num_complex::Complex;
 use rustfft::FftNum;
+use std::cell::RefCell;
 use std::ops::Deref;
 use std::ops::DerefMut;
 use std::sync::Arc;
@@ -148,16 +150,18 @@ where
     }
 }
 
-// TODO: Add a cache
+// TODO: Consider using UnsafeCell to avoid runtime borrow-checking.
 fn get_real_fft_algorithm<T: FftNum, const SIZE: usize>() -> Arc<dyn RealToComplex<T>> {
-    let mut real_planner = RealFftPlanner::<T>::new();
-    real_planner.plan_fft_forward(SIZE)
+    generic_singleton::get_or_init(|| RefCell::new(RealFftPlanner::new()))
+        .borrow_mut()
+        .plan_fft_forward(SIZE)
 }
 
-// TODO: Add a cache
+// TODO: Consider using UnsafeCell to avoid runtime borrow-checking.
 fn get_inverse_real_fft_algorithm<T: FftNum, const SIZE: usize>() -> Arc<dyn ComplexToReal<T>> {
-    let mut real_planner = RealFftPlanner::<T>::new();
-    real_planner.plan_fft_inverse(SIZE)
+    generic_singleton::get_or_init(|| RefCell::new(RealFftPlanner::new()))
+        .borrow_mut()
+        .plan_fft_inverse(SIZE)
 }
 #[cfg(test)]
 mod tests {
