@@ -6,6 +6,7 @@ signal at compile time.
 
 ### Advantages
 * If it compiles, your code **won't panic™** in this library[^panic]
+* No [Result] return type for you to worry about
 * Ergonomic API
 
 ### Current limitations
