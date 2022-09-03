@@ -288,29 +288,28 @@ mod tests {
         fft_and_ifft_are_inverse_operations(ARBITRARY_ODD_TEST_ARRAY);
     }
 
-    #[test]
-    fn real_fft_and_real_ifft_are_inverse_operations_even() {
-        let converted: Vec<_> = ARBITRARY_EVEN_TEST_ARRAY
+    fn real_fft_and_real_ifft_are_inverse_operations<const SIZE: usize>(array: [f64; SIZE])
+    where
+        [f64; SIZE / 2 + 1]: Sized,
+    {
+        let converted: Vec<_> = array
             .real_fft()
             .real_ifft()
             .iter_mut()
-            .map(|sample| *sample / ARBITRARY_EVEN_TEST_ARRAY.len() as f64)
+            .map(|sample| *sample / array.len() as f64)
             .collect();
-        for (converted, original) in converted.iter().zip(ARBITRARY_EVEN_TEST_ARRAY.iter()) {
-            approx::assert_ulps_eq!(converted, original);
+        for (converted, original) in converted.iter().zip(array.iter()) {
+            approx::assert_ulps_eq!(converted, original, epsilon = ACCEPTABLE_ERROR);
         }
     }
 
     #[test]
+    fn real_fft_and_real_ifft_are_inverse_operations_even() {
+        real_fft_and_real_ifft_are_inverse_operations(ARBITRARY_EVEN_TEST_ARRAY);
+    }
+
+    #[test]
     fn real_fft_and_real_ifft_are_inverse_operations_odd() {
-        let converted: Vec<_> = ARBITRARY_ODD_TEST_ARRAY
-            .real_fft()
-            .real_ifft()
-            .iter_mut()
-            .map(|sample| *sample / ARBITRARY_ODD_TEST_ARRAY.len() as f64)
-            .collect();
-        for (converted, original) in converted.iter().zip(ARBITRARY_ODD_TEST_ARRAY.iter()) {
-            approx::assert_ulps_eq!(converted, original, epsilon = ACCEPTABLE_ERROR);
-        }
+        real_fft_and_real_ifft_are_inverse_operations(ARBITRARY_ODD_TEST_ARRAY);
     }
 }
