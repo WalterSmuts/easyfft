@@ -184,6 +184,7 @@ mod tests {
             .iter_mut()
             .map(|sample| *sample / array.len() as f64)
             .collect();
+        assert_eq!(array.len(), converted.len());
         for (converted, original) in converted.iter().zip(array.iter()) {
             approx::assert_ulps_eq!(converted, original, epsilon = ACCEPTABLE_ERROR);
         }
