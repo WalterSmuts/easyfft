@@ -75,6 +75,12 @@ impl<T> DerefMut for DynRealDft<T> {
     }
 }
 
+impl<T> From<DynRealDft<T>> for Box<[Complex<T>]> {
+    fn from(dyn_real_dft: DynRealDft<T>) -> Self {
+        dyn_real_dft.inner
+    }
+}
+
 impl<T: FftNum + Default> DynRealFft<T> for [T] {
     fn real_fft(&self) -> DynRealDft<T> {
         let r2c = get_real_fft_algorithm::<T>(self.len());

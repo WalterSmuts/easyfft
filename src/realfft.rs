@@ -120,6 +120,15 @@ where
     }
 }
 
+impl<T, const SIZE: usize> From<RealDft<T, SIZE>> for [Complex<T>; SIZE / 2 + 1]
+where
+    [T; SIZE / 2 + 1]: Sized,
+{
+    fn from(real_dft: RealDft<T, SIZE>) -> Self {
+        real_dft.inner
+    }
+}
+
 impl<T: FftNum + Default, const SIZE: usize> RealFft<T, SIZE> for [T; SIZE]
 where
     [T; SIZE / 2 + 1]: Sized,
