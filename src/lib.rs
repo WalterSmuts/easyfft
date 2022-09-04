@@ -13,6 +13,7 @@ use std::sync::Arc;
 pub use rustfft::num_complex::Complex;
 pub use rustfft::FftNum;
 
+pub mod dynfft;
 #[cfg(feature = "realfft")]
 pub mod realfft;
 
