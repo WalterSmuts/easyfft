@@ -60,6 +60,36 @@ impl<T> Deref for DynRealDft<T> {
     }
 }
 
+impl<T> DynRealDft<T> {
+    /// Get a slice of all the frequency bins excluding the first [and, if the original signal has
+    /// an even number of samples, last] bin[s].
+    pub fn get_frequency_bins(&self) -> &[Complex<T>] {
+        // TODO: Consider an unchecked unwrap
+        let wanted_len = self.original_length - 1;
+        &self.inner[1..wanted_len / 2]
+    }
+
+    /// Get a mutable slice of all the frequency bins excluding the first [and, if the original
+    /// signal has an even number of samples, last] bin[s].
+    pub fn get_frequency_bins_mut(&mut self) -> &mut [Complex<T>] {
+        // TODO: Consider an unchecked unwrap
+        let wanted_len = self.original_length - 1;
+        &mut self.inner[1..wanted_len / 2]
+    }
+
+    /// Get an immutable reference to the constant offset of the signal, i.e. the zeroth frequency
+    /// bin.
+    pub fn get_offset(&self) -> &T {
+        &self.inner[0].re
+    }
+
+    /// Get an mutable reference to the constant offset of the signal, i.e. the zeroth frequency
+    /// bin.
+    pub fn get_offset_mut(&mut self) -> &mut T {
+        &mut self.inner[0].re
+    }
+}
+
 impl<T> From<DynRealDft<T>> for Box<[Complex<T>]> {
     fn from(dyn_real_dft: DynRealDft<T>) -> Self {
         dyn_real_dft.inner
@@ -76,6 +106,7 @@ impl<T: FftNum + Default> DynRealFft<T> for [T] {
             output.push(Complex::default());
         }
 
+        // TODO: Consider an unchecked unwrap
         r2c.process(&mut self.to_vec(), &mut output).unwrap();
         DynRealDft {
             inner: output.into_boxed_slice(),

@@ -102,6 +102,46 @@ where
     }
 }
 
+impl<T, const SIZE: usize> RealDft<T, SIZE>
+where
+    [T; SIZE / 2 + 1]: Sized,
+{
+    /// Get a reference to an array of all the frequency bins excluding the first [and, if the
+    /// original signal has an even number of samples, last] bin[s].
+    pub fn get_frequency_bins(&mut self) -> &[Complex<T>; (SIZE - 1) / 2] {
+        // TODO: Consider an unchecked unwrap
+        (&self.inner[1..(SIZE - 1) / 2]).try_into().unwrap()
+    }
+
+    /// Get a mutable reference to an array of all the frequency bins excluding the first [and, if
+    /// the original signal has an even number of samples, last] bin[s].
+    pub fn get_frequency_bins_mut(&mut self) -> &mut [Complex<T>; (SIZE - 1) / 2] {
+        // TODO: Consider an unchecked unwrap
+        (&mut self.inner[1..(SIZE - 1) / 2]).try_into().unwrap()
+    }
+
+    /// Get an immutable reference to the constant offset of the signal, i.e. the zeroth frequency
+    /// bin.
+    pub fn get_offset(&self) -> &T {
+        &self.inner[0].re
+    }
+
+    /// Get an mutable reference to the constant offset of the signal, i.e. the zeroth frequency
+    /// bin.
+    pub fn get_offset_mut(&mut self) -> &mut T {
+        &mut self.inner[0].re
+    }
+}
+
+impl<T, const SIZE: usize> From<RealDft<T, SIZE>> for [Complex<T>; SIZE / 2 + 1]
+where
+    [T; SIZE / 2 + 1]: Sized,
+{
+    fn from(real_dft: RealDft<T, SIZE>) -> Self {
+        real_dft.inner
+    }
+}
+
 impl<T: FftNum + Default, const SIZE: usize> RealFft<T, SIZE> for [T; SIZE]
 where
     [T; SIZE / 2 + 1]: Sized,
