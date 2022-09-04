@@ -53,7 +53,7 @@ for (original, manipulated) in complex_signal.iter().zip(complex_signal_dft_idft
 ```
 
 ### Real Signal Example:
-See [crate::realfft] level documentation.
+See [realfft module] level documentation.
 
 ### Possible future plans
 Currently I don't see any reason why the same API (minus the compile time size
@@ -75,3 +75,5 @@ errors.
 [realfft]: https://docs.rs/realfft/latest/realfft/
 [arrays]: https://doc.rust-lang.org/std/primitive.array.html
 [generic_const_exprs]: https://github.com/rust-lang/rust/issues/76560
+[Result]: https://doc.rust-lang.org/std/result/enum.Result.html
+[realfft module]: https://docs.rs/constfft/latest/constfft/realfft/index.html
