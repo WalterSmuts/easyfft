@@ -48,7 +48,7 @@ impl<T: FftNum + Default, const SIZE: usize> Fft<T, SIZE> for [T; SIZE] {
             .unwrap_unchecked()
         };
 
-        get_fft_algorithm::<T, SIZE>().process(&mut buffer);
+        get_fft_algorithm::<T>(SIZE).process(&mut buffer);
         buffer
     }
 }
@@ -57,7 +57,7 @@ impl<T: FftNum, const SIZE: usize> Fft<T, SIZE> for [Complex<T>; SIZE] {
     fn fft(&self) -> [Complex<T>; SIZE] {
         // Copy into a new buffer
         let mut buffer: [Complex<T>; SIZE] = *self;
-        get_fft_algorithm::<T, SIZE>().process(&mut buffer);
+        get_fft_algorithm::<T>(SIZE).process(&mut buffer);
         buffer
     }
 }
@@ -114,23 +114,23 @@ pub(crate) mod generic_singleton {
 }
 
 // TODO: Consider using UnsafeCell to avoid runtime borrow-checking.
-fn get_fft_algorithm<T: FftNum, const SIZE: usize>() -> Arc<dyn rustfft::Fft<T>> {
+fn get_fft_algorithm<T: FftNum>(size: usize) -> Arc<dyn rustfft::Fft<T>> {
     generic_singleton::get_or_init(|| RefCell::new(FftPlanner::new()))
         .borrow_mut()
-        .plan_fft_forward(SIZE)
+        .plan_fft_forward(size)
 }
 
 // TODO: Consider using UnsafeCell to avoid runtime borrow-checking.
-fn get_inverse_fft_algorithm<T: FftNum, const SIZE: usize>() -> Arc<dyn rustfft::Fft<T>> {
+fn get_inverse_fft_algorithm<T: FftNum>(size: usize) -> Arc<dyn rustfft::Fft<T>> {
     generic_singleton::get_or_init(|| RefCell::new(FftPlanner::new()))
         .borrow_mut()
-        .plan_fft_inverse(SIZE)
+        .plan_fft_inverse(size)
 }
 
 impl<T: FftNum + Default, const SIZE: usize> Ifft<T, SIZE> for [Complex<T>; SIZE] {
     fn ifft(&self) -> [Complex<T>; SIZE] {
         let mut buffer = *self;
-        get_inverse_fft_algorithm::<T, SIZE>().process(&mut buffer);
+        get_inverse_fft_algorithm::<T>(SIZE).process(&mut buffer);
         buffer
     }
 }
