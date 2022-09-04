@@ -7,7 +7,6 @@ use rustfft::num_complex::Complex;
 use rustfft::FftNum;
 use std::cell::RefCell;
 use std::ops::Deref;
-use std::ops::DerefMut;
 use std::sync::Arc;
 
 /// A trait for performing fast DFT's on structs representing real signals with a size unknown at
@@ -42,13 +41,6 @@ pub trait DynRealIfft<T> {
 /// This newly created type is the [RealDft] and has the same memory representation as our original
 /// type, but is blessed with the knowledge of its origins.
 ///
-///
-/// ### Caution!
-/// Currently you can still cause a [panic!] by modifying the [RealDft] struct via the [DerefMut]
-/// trait to a value that does not have a defined IDFT. This is left open for now until I figure
-/// out how to define the operations that should be allowed on [RealDft] to keep it valid. Same
-/// blocker is in place for constructing a [RealDft] using a `new` constructor.
-///
 /// [explained]: https://docs.rs/realfft/latest/realfft/index.html#real-to-complex
 /// [discrete fourier transform]: https://en.wikipedia.org/wiki/Discrete_Fourier_transform
 /// [realfft crate]: https://docs.rs/realfft/latest/realfft/index.html
@@ -65,13 +57,6 @@ impl<T> Deref for DynRealDft<T> {
 
     fn deref(&self) -> &Self::Target {
         &self.inner
-    }
-}
-
-// TODO: Figure out how to restrict user to make invalid modifications
-impl<T> DerefMut for DynRealDft<T> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.inner
     }
 }
 
@@ -107,7 +92,12 @@ impl<T: FftNum + Default> DynRealIfft<T> for DynRealDft<T> {
         for _ in 0..self.original_length {
             output.push(T::default());
         }
-        c2r.process(&mut (*self).clone(), &mut output).unwrap();
+        // TODO: Consider an unchecked unwrap
+        c2r.process(
+            &mut Into::<Box<[Complex<T>]>>::into(self.clone()),
+            &mut output,
+        )
+        .unwrap();
         output.into_boxed_slice()
     }
 }

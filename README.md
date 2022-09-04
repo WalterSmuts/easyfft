@@ -54,9 +54,6 @@ See [realfft module] level documentation.
 
 #### Footnotes
 [^panic]: While this could be true in theory, in practice it most probably is not.
-Currently you can create a `RealDft` struct and mutate it using the `DerefMut`
-trait in a way that the `real_ifft` method will cause a panic. This should be
-fixable in a future patch release currently pending implementation details.
 There could be other bugs in this crate or it's dependencies that may cause a
 panic, but in theory all the runtime panics have been moved to compile time
 errors.
