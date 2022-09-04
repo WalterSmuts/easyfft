@@ -6,7 +6,7 @@
 //! this requirement will be lifted. For now I've feature-gated the [crate::realfft]  module so you
 //! need to explicitly enable it in your `Cargo.toml`:
 //! ```text
-//! constfft = { version = "LATEST_VERSION", features = ["realfft"] }
+//! easyfft = { version = "LATEST_VERSION", features = ["realfft"] }
 //! ```
 //!
 //! ### Real Signal Example:
@@ -15,8 +15,8 @@
 //! #![feature(generic_const_exprs)]
 //!
 //! use approx::assert_ulps_eq;
-//! use constfft::realfft::RealFft;
-//! use constfft::realfft::RealIfft;
+//! use easyfft::realfft::RealFft;
+//! use easyfft::realfft::RealIfft;
 //!
 //! // Define a real-valued signal
 //! let real_signal = [1.0_f64; 10];

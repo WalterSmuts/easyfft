@@ -1,8 +1,6 @@
-# constfft
-A Rust library crate providing an [FFT] API for arrays. This crate wraps the
+# easyfft
+A Rust library crate providing an [FFT] API for arrays and slices. This crate wraps the
 [rustfft] and [realfft] crates that does the heavy lifting behind the scenes.
-Use `constfft` if you're working with [arrays], i.e. you know the size of the
-signal at compile time.
 
 ### Advantages
 * If it compiles, your code **won't panic™** in this library[^panic]
@@ -10,16 +8,15 @@ signal at compile time.
 * Ergonomic API
 
 ### Current limitations
-* No implementation for slices
 * The `realfft` feature requires the `nightly` compiler because it depends on
   the [generic_const_exprs] feature
 
-### Complex Signal Example:
+### Complex Array Example:
 ```rust
 use approx::assert_ulps_eq;
-use constfft::Complex;
-use constfft::Fft;
-use constfft::Ifft;
+use easyfft::Complex;
+use easyfft::Fft;
+use easyfft::Ifft;
 
 // Define a real-valued signal
 let real_signal = [1.0_f64; 10];
@@ -55,12 +52,6 @@ for (original, manipulated) in complex_signal.iter().zip(complex_signal_dft_idft
 ### Real Signal Example:
 See [realfft module] level documentation.
 
-### Possible future plans
-Currently I don't see any reason why the same API (minus the compile time size
-checks) cannot be implementable on slices. This seems like a much nicer API to
-work with and AFAICT does not depend on the types to be arrays. If this is the
-case I'd implement the same API on slices and rename this crate to `easyfft`.
-
 #### Footnotes
 [^panic]: While this could be true in theory, in practice it most probably is not.
 Currently you can create a `RealDft` struct and mutate it using the `DerefMut`
@@ -76,4 +67,4 @@ errors.
 [arrays]: https://doc.rust-lang.org/std/primitive.array.html
 [generic_const_exprs]: https://github.com/rust-lang/rust/issues/76560
 [Result]: https://doc.rust-lang.org/std/result/enum.Result.html
-[realfft module]: https://docs.rs/constfft/latest/constfft/realfft/index.html
+[realfft module]: https://docs.rs/easyfft/latest/easyfft/realfft/index.html
