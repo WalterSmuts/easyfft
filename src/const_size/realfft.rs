@@ -15,8 +15,8 @@
 //! #![feature(generic_const_exprs)]
 //!
 //! use approx::assert_ulps_eq;
-//! use easyfft::realfft::RealFft;
-//! use easyfft::realfft::RealIfft;
+//! use easyfft::const_size::realfft::RealFft;
+//! use easyfft::const_size::realfft::RealIfft;
 //!
 //! // Define a real-valued signal
 //! let real_signal = [1.0_f64; 10];
