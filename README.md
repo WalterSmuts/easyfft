@@ -10,6 +10,8 @@ A Rust library crate providing an [FFT] API for arrays and slices. This crate wr
 ### Current limitations
 * The `realfft` feature requires the `nightly` compiler because it depends on
   the [generic_const_exprs] feature
+* There is no methods for in-place mutation. You're expected to provide two
+  separate input and output buffers.
 
 #### Footnotes
 [^panic]: While this could be true in theory, in practice it most probably is not.
