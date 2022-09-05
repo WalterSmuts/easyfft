@@ -21,7 +21,6 @@ const-realfft = []
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-anymap = "0.12.1"
 array-init = "2.0.1"
 generic_singleton = "0.1.2"
 realfft = { version = "3.0.1"}
