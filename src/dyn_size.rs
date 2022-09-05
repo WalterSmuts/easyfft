@@ -4,8 +4,8 @@
 //! ```rust
 //! use approx::assert_ulps_eq;
 //! use easyfft::Complex;
-//! use easyfft::dynfft::DynFft;
-//! use easyfft::dynfft::DynIfft;
+//! use easyfft::dyn_size::DynFft;
+//! use easyfft::dyn_size::DynIfft;
 //!
 //! // Define a complex-valued signal and convert to a slice
 //! let complex_signal: &[Complex<f64>] = &[Complex::new(1.0_f64, 0.0); 10];

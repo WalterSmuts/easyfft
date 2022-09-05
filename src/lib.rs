@@ -20,7 +20,7 @@ pub use rustfft::num_complex::Complex;
 pub use rustfft::FftNum;
 
 pub mod const_size;
-pub mod dynfft;
+pub mod dyn_size;
 
 pub(crate) struct PrivateWrapper<T>(T);
 

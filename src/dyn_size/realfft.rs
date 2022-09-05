@@ -3,8 +3,8 @@
 //! ### Example:
 //! ```rust
 //! use approx::assert_ulps_eq;
-//! use easyfft::dynfft::realfft::DynRealFft;
-//! use easyfft::dynfft::realfft::DynRealIfft;
+//! use easyfft::dyn_size::realfft::DynRealFft;
+//! use easyfft::dyn_size::realfft::DynRealIfft;
 //!
 //! // Define a real-valued signal slice
 //! let real_signal: &[f64] = &[1.0_f64; 10];
