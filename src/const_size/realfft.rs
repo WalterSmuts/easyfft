@@ -2,9 +2,9 @@
 //!
 //! ### Requires `nightly`!
 //! Unfortunately this module depends on the unstable [`generic_const_exprs`] feature of rust. That
-//! means you can only use it via the nightly compiler. Once [`generic_const_exprs`] lands in stable,
-//! this requirement will be lifted. For now I've feature-gated the [crate::realfft]  module so you
-//! need to explicitly enable it in your `Cargo.toml`:
+//! means you can only use it via the nightly compiler. Once [`generic_const_exprs`] lands in
+//! stable, this requirement will be lifted. For now I've feature-gated the
+//! [crate::const_size::realfft]  module so you need to explicitly enable it in your `Cargo.toml`:
 //! ```text
 //! easyfft = { version = "LATEST_VERSION", features = ["realfft"] }
 //! ```
@@ -65,7 +65,7 @@ pub trait RealIfft<T, const SIZE: usize> {
 /// returning half the complex frequency domain signal since the other half can be inferred because
 /// the DFT of a real signal is [known to be symmetric]. This poses a problem when attempting to do
 /// the inverse discrete fourier transform since a signal of type `[Xr; SIZE]` would return a
-/// complex signal of type `Complex<Xre, Xim>; SIZE / 2 -1]`. Note that `[_; SIZE]` gets mapped to
+/// complex signal of type `Complex<Xre, Xim>; SIZE / 2 - 1]`. Note that `[_; SIZE]` gets mapped to
 /// `[_; SIZE / 2 + 1]` and the index of an array is a natural number, so we're working with lossy
 /// integer division here. Specifically, observe that __BOTH__ a signal of type `[_; 5]` and
 /// `[_; 4]` would be mapped to a DFT of type `[_; 3]`. This means the IDFT cannot be unambiguously
@@ -103,15 +103,15 @@ impl<T, const SIZE: usize> RealDft<T, SIZE>
 where
     [T; SIZE / 2 + 1]: Sized,
 {
-    /// Get a reference to an array of all the frequency bins excluding the first [and, if the
-    /// original signal has an even number of samples, last] bin[s].
+    /// Get a reference to an array of all the frequency bins excluding the first (and, if the
+    /// original signal has an even number of samples, last) bin(s).
     pub fn get_frequency_bins(&mut self) -> &[Complex<T>; (SIZE - 1) / 2] {
         // TODO: Consider an unchecked unwrap
         (&self.inner[1..(SIZE - 1) / 2]).try_into().unwrap()
     }
 
-    /// Get a mutable reference to an array of all the frequency bins excluding the first [and, if
-    /// the original signal has an even number of samples, last] bin[s].
+    /// Get a mutable reference to an array of all the frequency bins excluding the first (and, if
+    /// the original signal has an even number of samples, last) bin(s).
     pub fn get_frequency_bins_mut(&mut self) -> &mut [Complex<T>; (SIZE - 1) / 2] {
         // TODO: Consider an unchecked unwrap
         (&mut self.inner[1..(SIZE - 1) / 2]).try_into().unwrap()

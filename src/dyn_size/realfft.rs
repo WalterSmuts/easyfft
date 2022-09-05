@@ -51,7 +51,7 @@ pub trait DynRealIfft<T> {
 /// returning half the complex frequency domain signal since the other half can be inferred because
 /// the DFT of a real signal is [known to be symmetric]. This poses a problem when attempting to do
 /// the inverse discrete fourier transform since a signal of size `SIZE` would return a
-/// complex signal of size `SIZE / 2 -1`. Note that `SIZE` gets mapped to
+/// complex signal of size `SIZE / 2 - 1`. Note that `SIZE` gets mapped to
 /// `SIZE / 2 + 1` and the index of an array is a natural number, so we're working with lossy
 /// integer division here. Specifically, observe that __BOTH__ a signal of length `5` and
 /// `4` would be mapped to a DFT of length `3`. The length of the resulting signal is not enough to
@@ -81,16 +81,16 @@ impl<T> Deref for DynRealDft<T> {
 }
 
 impl<T> DynRealDft<T> {
-    /// Get a slice of all the frequency bins excluding the first [and, if the original signal has
-    /// an even number of samples, last] bin[s].
+    /// Get a slice of all the frequency bins excluding the first (and, if the original signal has
+    /// an even number of samples, last) bin(s).
     pub fn get_frequency_bins(&self) -> &[Complex<T>] {
         // TODO: Consider an unchecked unwrap
         let wanted_len = self.original_length - 1;
         &self.inner[1..wanted_len / 2]
     }
 
-    /// Get a mutable slice of all the frequency bins excluding the first [and, if the original
-    /// signal has an even number of samples, last] bin[s].
+    /// Get a mutable slice of all the frequency bins excluding the first (and, if the original
+    /// signal has an even number of samples, last) bin(s).
     pub fn get_frequency_bins_mut(&mut self) -> &mut [Complex<T>] {
         // TODO: Consider an unchecked unwrap
         let wanted_len = self.original_length - 1;
