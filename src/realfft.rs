@@ -1,4 +1,4 @@
-//! Traits and structs for real-valued discrete fourier transforms.
+//! Traits and structs for real-valued discrete fourier transforms on arrays.
 //!
 //! ### Requires `nightly`!
 //! Unfortunately this module depends on the unstable [`generic_const_exprs`] feature of rust. That

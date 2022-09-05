@@ -1,4 +1,27 @@
-//! WIP - No docs for now
+//! Traits and structs for real-valued discrete fourier transforms on slices.
+//!
+//! ### Example:
+//! ```rust
+//! use approx::assert_ulps_eq;
+//! use easyfft::dynfft::realfft::DynRealFft;
+//! use easyfft::dynfft::realfft::DynRealIfft;
+//!
+//! // Define a real-valued signal slice
+//! let real_signal: &[f64] = &[1.0_f64; 10];
+//!
+//! // Call `.real_fft()` on the signal to obtain it's discrete fourier transform
+//! let real_signal_dft = real_signal.real_fft();
+//! // Call `.real_ifft` on the DynRealDft signal to obtain it's real inverse
+//! let real_signal_dft_idft: &[f64] = &real_signal_dft.real_ifft();
+//!
+//! // Verify the signals are original and manipulated signals are the same length
+//! assert_eq!(real_signal.len(), real_signal_dft_idft.len());
+//!
+//! // Verify the resulting ifft is a scaled version of the original signal
+//! for (original, manipulated) in real_signal.iter().zip(real_signal_dft_idft) {
+//!     assert_ulps_eq!(*manipulated, original * 10.0);
+//! }
+//! ```
 use crate::PrivateWrapper;
 use generic_singleton;
 use realfft::ComplexToReal;
@@ -10,37 +33,37 @@ use std::cell::RefCell;
 use std::ops::Deref;
 use std::sync::Arc;
 
-/// A trait for performing fast DFT's on structs representing real signals with a size unknown at
+/// A trait for performing fast DFT's on structs representing real signals with a size not known at
 /// compile time.
 pub trait DynRealFft<T> {
     /// Perform a real-valued FFT on a signal with input size `SIZE` and output size `SIZE / 2 + 1`.
     fn real_fft(&self) -> DynRealDft<T>;
 }
 
-/// A trait for performing fast IDFT's on structs representing real signals with a size unknown at
-/// compile time.
+/// A trait for performing fast IDFT's on structs representing real signals with a size not known
+/// at compile time.
 pub trait DynRealIfft<T> {
     /// Perform a real-valued IFFT on a signal which originally had input size `SIZE`.
     fn real_ifft(&self) -> Box<[T]>;
 }
 
 // TODO: Define constructor for creating this type manually
-/// The result of calling [RealFft::real_fft].
+/// The result of calling [DynRealFft::real_fft].
 ///
 /// As [explained] by the author of the [realfft crate], a real valued signal can have some
 /// optimizations applied when calculating it's [discrete fourier transform]. This involves only
 /// returning half the complex frequency domain signal since the other half can be inferred because
-/// the DFT of a real signal is [unknown to be symmetric]. This poses a problem when attempting to do
-/// the inverse discrete fourier transform since a signal of type `[Xr; SIZE]` would return a
-/// complex signal of type `Complex<Xre, Xim>; SIZE / 2 -1]`. Note that `[_; SIZE]` gets mapped to
-/// `[_; SIZE / 2 + 1]` and the index of an array is a natural number, so we're working with lossy
-/// integer division here. Specifically, observe that __BOTH__ a signal of type `[_; 5]` and
-/// `[_; 4]` would be mapped to a DFT of type `[_; 3]`. This means the IDFT cannot be unambiguously
-/// determined by the type of the DFT.
+/// the DFT of a real signal is [known to be symmetric]. This poses a problem when attempting to do
+/// the inverse discrete fourier transform since a signal of size `SIZE` would return a
+/// complex signal of size `SIZE / 2 -1`. Note that `SIZE` gets mapped to
+/// `SIZE / 2 + 1` and the index of an array is a natural number, so we're working with lossy
+/// integer division here. Specifically, observe that __BOTH__ a signal of length `5` and
+/// `4` would be mapped to a DFT of length `3`. The length of the resulting signal is not enough to
+/// determine the appropriate inverse.
 ///
 /// The solution is to wrap the array in a different type which contains extra type information.
-/// This newly created type is the [RealDft] and has the same memory representation as our original
-/// type, but is blessed with the knowledge of its origins.
+/// This newly created type is the [DynRealDft] and has an extra field indicating which sized
+/// signal was used to create it.
 ///
 /// [explained]: https://docs.rs/realfft/latest/realfft/index.html#real-to-complex
 /// [discrete fourier transform]: https://en.wikipedia.org/wiki/Discrete_Fourier_transform
