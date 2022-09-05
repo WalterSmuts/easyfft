@@ -57,7 +57,7 @@ fn main() {
 
     // In-place mutation on complex -> complex transforms
     let mut complex_slice = [Complex::new(1.0, 0.0); 100];
-    complex_slice.fft_mut(); // Converts the buffer to a
+    complex_slice.fft_mut();
     complex_slice.ifft_mut();
     let mut complex_array = [Complex::new(1.0, 0.0); 100];
     complex_array.fft_mut();
