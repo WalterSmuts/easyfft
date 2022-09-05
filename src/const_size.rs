@@ -1,4 +1,4 @@
-//! TODO Add module level documentation.
+//! Provides an easy FFT api for arrays.
 //!
 //! ### Example:
 //! ```rust
