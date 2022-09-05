@@ -78,7 +78,7 @@ pub trait RealIfft<T, const SIZE: usize> {
 /// [explained]: https://docs.rs/realfft/latest/realfft/index.html#real-to-complex
 /// [discrete fourier transform]: https://en.wikipedia.org/wiki/Discrete_Fourier_transform
 /// [realfft crate]: https://docs.rs/realfft/latest/realfft/index.html
-/// [know to be symmetric]: https://en.wikipedia.org/wiki/Discrete_Fourier_transform#DFT_of_real_and_purely_imaginary_signals
+/// [known to be symmetric]: https://en.wikipedia.org/wiki/Discrete_Fourier_transform#DFT_of_real_and_purely_imaginary_signals
 /// [phantom type]: https://doc.rust-lang.org/rust-by-example/generics/phantom.html
 #[derive(Debug)]
 pub struct RealDft<T, const SIZE: usize>
