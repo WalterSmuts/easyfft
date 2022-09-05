@@ -8,7 +8,7 @@ A Rust library crate providing an [FFT] API for arrays and slices. This crate wr
 * Ergonomic API
 
 ### Current limitations
-* The `realfft` feature requires the `nightly` compiler because it depends on
+* The `const-realfft` feature requires the `nightly` compiler because it depends on
   the [generic_const_exprs] feature
 * There are no methods for in-place mutation for complex -> real or real ->
   complex transforms.
