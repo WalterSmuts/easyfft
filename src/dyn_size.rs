@@ -44,6 +44,20 @@ pub trait DynIfft<T> {
     fn ifft(&self) -> Box<[Complex<T>]>;
 }
 
+/// A trait for performing fast in-place DFT's on structs representing complex signals with a size
+/// not known at compile time.
+pub trait DynFftMut<T> {
+    /// Perform a complex-valued in-place FFT on a signal.
+    fn fft_mut(&mut self);
+}
+
+/// A trait for performing fast in-place IDFT's on structs representing complex signals with a size
+/// not known at compile time.
+pub trait DynIfftMut<T> {
+    /// Perform a complex-valued in-place IFFT on a signal.
+    fn ifft_mut(&mut self);
+}
+
 impl<T: FftNum + Default> DynFft<T> for [Complex<T>] {
     fn fft(&self) -> Box<[Complex<T>]> {
         // TODO: Remove unnesasary initialization
@@ -69,5 +83,17 @@ impl<T: FftNum + Default> DynIfft<T> for [Complex<T>] {
         buffer.copy_from_slice(self);
         crate::get_inverse_fft_algorithm::<T>(self.len()).process(&mut buffer);
         buffer.into_boxed_slice()
+    }
+}
+
+impl<T: FftNum> DynFftMut<T> for [Complex<T>] {
+    fn fft_mut(&mut self) {
+        crate::get_fft_algorithm::<T>(self.len()).process(self);
+    }
+}
+
+impl<T: FftNum> DynIfftMut<T> for [Complex<T>] {
+    fn ifft_mut(&mut self) {
+        crate::get_inverse_fft_algorithm::<T>(self.len()).process(self);
     }
 }

@@ -47,6 +47,20 @@ pub trait Ifft<T, const SIZE: usize> {
     fn ifft(&self) -> [Complex<T>; SIZE];
 }
 
+/// A trait for performing fast in-place DFT's on structs representing complex signals with a size
+/// known at compile time.
+pub trait FftMut<T, const SIZE: usize> {
+    /// Perform a complex-valued in-place FFT on a signal.
+    fn fft_mut(&mut self);
+}
+
+/// A trait for performing fast in-place IDFT's on structs representing complex signals with a size
+/// known at compile time.
+pub trait IfftMut<T, const SIZE: usize> {
+    /// Perform a complex-valued in-place IFFT on a signal.
+    fn ifft_mut(&mut self);
+}
+
 impl<T: FftNum + Default, const SIZE: usize> Fft<T, SIZE> for [T; SIZE] {
     fn fft(&self) -> [Complex<T>; SIZE] {
         // SAFETY:
@@ -84,6 +98,18 @@ impl<T: FftNum + Default, const SIZE: usize> Ifft<T, SIZE> for [Complex<T>; SIZE
         let mut buffer = *self;
         get_inverse_fft_algorithm::<T>(SIZE).process(&mut buffer);
         buffer
+    }
+}
+
+impl<T: FftNum, const SIZE: usize> FftMut<T, SIZE> for [Complex<T>; SIZE] {
+    fn fft_mut(&mut self) {
+        get_fft_algorithm::<T>(SIZE).process(self);
+    }
+}
+
+impl<T: FftNum + Default, const SIZE: usize> IfftMut<T, SIZE> for [Complex<T>; SIZE] {
+    fn ifft_mut(&mut self) {
+        get_inverse_fft_algorithm::<T>(SIZE).process(self);
     }
 }
 
