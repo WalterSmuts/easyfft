@@ -21,7 +21,12 @@ pub trait DynIfft<T> {
 
 impl<T: FftNum + Default> DynFft<T> for [Complex<T>] {
     fn fft(&self) -> Box<[Complex<T>]> {
-        let mut buffer = Vec::new();
+        // TODO: Remove unnesasary initialization
+        let mut buffer = Vec::with_capacity(self.len());
+        for _ in 0..self.len() {
+            buffer.push(Complex::default())
+        }
+
         buffer.clone_from_slice(self);
 
         crate::get_fft_algorithm::<T>(self.len()).process(&mut buffer);
@@ -31,7 +36,11 @@ impl<T: FftNum + Default> DynFft<T> for [Complex<T>] {
 
 impl<T: FftNum + Default> DynIfft<T> for [Complex<T>] {
     fn ifft(&self) -> Box<[Complex<T>]> {
-        let mut buffer = Vec::new();
+        // TODO: Remove unnesasary initialization
+        let mut buffer = Vec::with_capacity(self.len());
+        for _ in 0..self.len() {
+            buffer.push(Complex::default())
+        }
         buffer.copy_from_slice(self);
         crate::get_inverse_fft_algorithm::<T>(self.len()).process(&mut buffer);
         buffer.into_boxed_slice()
