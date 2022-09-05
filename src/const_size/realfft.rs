@@ -5,7 +5,7 @@
 //! means you can only use it via the nightly compiler. Once [`generic_const_exprs`] lands in
 //! stable, this requirement will be lifted. For now I've feature-gated the
 //! [crate::const_size::realfft]  module so you need to explicitly enable it in your `Cargo.toml`:
-//! ```text
+//! ```toml
 //! easyfft = { version = "LATEST_VERSION", features = ["const-realfft"] }
 //! ```
 //!
