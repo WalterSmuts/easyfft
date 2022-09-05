@@ -3,8 +3,8 @@
 #![deny(missing_docs)]
 #![deny(clippy::undocumented_unsafe_blocks)]
 #![doc = include_str!("../README.md")]
-#![cfg_attr(feature = "realfft", allow(incomplete_features))]
-#![cfg_attr(feature = "realfft", feature(generic_const_exprs))]
+#![cfg_attr(feature = "const-realfft", allow(incomplete_features))]
+#![cfg_attr(feature = "const-realfft", feature(generic_const_exprs))]
 
 #[rustfmt::skip]
 use ::realfft::ComplexToReal;

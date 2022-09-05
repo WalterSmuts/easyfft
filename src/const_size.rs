@@ -30,7 +30,7 @@ use ::realfft::FftNum;
 use crate::get_fft_algorithm;
 use crate::get_inverse_fft_algorithm;
 
-#[cfg(feature = "realfft")]
+#[cfg(feature = "const-realfft")]
 pub mod realfft;
 
 /// A trait for performing fast DFT's on structs representing complex signals with a size known at

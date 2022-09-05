@@ -28,7 +28,6 @@
 use rustfft::num_complex::Complex;
 use rustfft::FftNum;
 
-#[cfg(feature = "realfft")]
 pub mod realfft;
 
 /// A trait for performing fast DFT's on structs representing complex signals with a size not known

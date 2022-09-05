@@ -6,7 +6,7 @@
 //! stable, this requirement will be lifted. For now I've feature-gated the
 //! [crate::const_size::realfft]  module so you need to explicitly enable it in your `Cargo.toml`:
 //! ```text
-//! easyfft = { version = "LATEST_VERSION", features = ["realfft"] }
+//! easyfft = { version = "LATEST_VERSION", features = ["const-realfft"] }
 //! ```
 //!
 //! ### Real Signal Example:
