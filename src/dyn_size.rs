@@ -58,6 +58,19 @@ pub trait DynIfftMut<T> {
     fn ifft_mut(&mut self);
 }
 
+impl<T: FftNum + Default> DynFft<T> for [T] {
+    fn fft(&self) -> Box<[Complex<T>]> {
+        // TODO: Remove unnesasary initialization
+        let mut buffer = Vec::with_capacity(self.len());
+        for sample in self {
+            buffer.push(Complex::new(*sample, T::default()))
+        }
+
+        crate::get_fft_algorithm::<T>(self.len()).process(&mut buffer);
+        buffer.into_boxed_slice()
+    }
+}
+
 impl<T: FftNum + Default> DynFft<T> for [Complex<T>] {
     fn fft(&self) -> Box<[Complex<T>]> {
         // TODO: Remove unnesasary initialization
