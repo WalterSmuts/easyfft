@@ -1,12 +1,12 @@
 [package]
 name = "easyfft"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Walter Smuts <smuts.walter@gmail.com>"]
 edition = "2021"
 license = "MIT OR Apache-2.0"
 description = "A library crate providing an easy FFT API for arrays and slices"
 documentation = "https://docs.rs/easyfft/"
-repository = "https://github.com/WalterSmuts/constfft"
+repository = "https://github.com/WalterSmuts/easyfft"
 keywords = ["fft", "dft", "discrete", "fourier", "const-generics"]
 categories = ["algorithms", "compression", "multimedia::encoding", "science", "mathematics"]
 readme = "README.md"
