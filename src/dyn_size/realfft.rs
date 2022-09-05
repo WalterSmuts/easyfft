@@ -1,4 +1,4 @@
-//! Traits and structs for real-valued discrete fourier transforms on slices.
+//! Provides an easy real-valued FFT api for slices.
 //!
 //! ### Example:
 //! ```rust
