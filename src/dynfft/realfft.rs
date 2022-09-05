@@ -22,16 +22,12 @@
 //!     assert_ulps_eq!(*manipulated, original * 10.0);
 //! }
 //! ```
-use crate::PrivateWrapper;
-use generic_singleton;
-use realfft::ComplexToReal;
-use realfft::RealFftPlanner;
-use realfft::RealToComplex;
 use rustfft::num_complex::Complex;
 use rustfft::FftNum;
-use std::cell::RefCell;
 use std::ops::Deref;
-use std::sync::Arc;
+
+use crate::get_inverse_real_fft_algorithm;
+use crate::get_real_fft_algorithm;
 
 /// A trait for performing fast DFT's on structs representing real signals with a size not known at
 /// compile time.
@@ -155,22 +151,6 @@ impl<T: FftNum + Default> DynRealIfft<T> for DynRealDft<T> {
         .unwrap();
         output.into_boxed_slice()
     }
-}
-
-// TODO: Consider using UnsafeCell to avoid runtime borrow-checking.
-fn get_real_fft_algorithm<T: FftNum>(size: usize) -> Arc<dyn RealToComplex<T>> {
-    generic_singleton::get_or_init(|| RefCell::new(PrivateWrapper(RealFftPlanner::new())))
-        .borrow_mut()
-        .0
-        .plan_fft_forward(size)
-}
-
-// TODO: Consider using UnsafeCell to avoid runtime borrow-checking.
-fn get_inverse_real_fft_algorithm<T: FftNum>(size: usize) -> Arc<dyn ComplexToReal<T>> {
-    generic_singleton::get_or_init(|| RefCell::new(PrivateWrapper(RealFftPlanner::new())))
-        .borrow_mut()
-        .0
-        .plan_fft_inverse(size)
 }
 
 #[cfg(test)]

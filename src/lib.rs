@@ -6,6 +6,12 @@
 #![cfg_attr(feature = "realfft", allow(incomplete_features))]
 #![cfg_attr(feature = "realfft", feature(generic_const_exprs))]
 
+#[rustfmt::skip]
+use ::realfft::ComplexToReal;
+#[rustfmt::skip]
+use ::realfft::RealFftPlanner;
+#[rustfmt::skip]
+use ::realfft::RealToComplex;
 use rustfft::FftPlanner;
 use std::cell::RefCell;
 use std::sync::Arc;
@@ -87,6 +93,22 @@ impl<T: FftNum + Default, const SIZE: usize> Ifft<T, SIZE> for [Complex<T>; SIZE
         get_inverse_fft_algorithm::<T>(SIZE).process(&mut buffer);
         buffer
     }
+}
+
+// TODO: Consider using UnsafeCell to avoid runtime borrow-checking.
+fn get_real_fft_algorithm<T: FftNum>(size: usize) -> Arc<dyn RealToComplex<T>> {
+    generic_singleton::get_or_init(|| RefCell::new(PrivateWrapper(RealFftPlanner::new())))
+        .borrow_mut()
+        .0
+        .plan_fft_forward(size)
+}
+
+// TODO: Consider using UnsafeCell to avoid runtime borrow-checking.
+fn get_inverse_real_fft_algorithm<T: FftNum>(size: usize) -> Arc<dyn ComplexToReal<T>> {
+    generic_singleton::get_or_init(|| RefCell::new(PrivateWrapper(RealFftPlanner::new())))
+        .borrow_mut()
+        .0
+        .plan_fft_inverse(size)
 }
 
 #[cfg(test)]

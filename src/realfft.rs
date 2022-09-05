@@ -33,15 +33,12 @@
 //! ```
 //! [`generic_const_exprs`]: https://github.com/rust-lang/rust/issues/76560
 
-use crate::PrivateWrapper;
-use realfft::ComplexToReal;
-use realfft::RealFftPlanner;
-use realfft::RealToComplex;
 use rustfft::num_complex::Complex;
 use rustfft::FftNum;
-use std::cell::RefCell;
 use std::ops::Deref;
-use std::sync::Arc;
+
+use crate::get_inverse_real_fft_algorithm;
+use crate::get_real_fft_algorithm;
 
 /// A trait for performing fast DFT's on structs representing real signals with a size known at
 /// compile time.
@@ -147,7 +144,7 @@ where
     [T; SIZE / 2 + 1]: Sized,
 {
     fn real_fft(&self) -> RealDft<T, SIZE> {
-        let r2c = get_real_fft_algorithm::<T, SIZE>();
+        let r2c = get_real_fft_algorithm::<T>(SIZE);
 
         // TODO: Remove default dependency and unnesasary initialization
         let mut output = [Complex::default(); SIZE / 2 + 1];
@@ -163,7 +160,7 @@ where
     [T; SIZE / 2 + 1]: Sized,
 {
     fn real_ifft(&self) -> [T; SIZE] {
-        let c2r = get_inverse_real_fft_algorithm::<T, SIZE>();
+        let c2r = get_inverse_real_fft_algorithm::<T>(SIZE);
 
         // TODO: Remove default dependency and unnesasary initialization
         let mut output = [T::default(); SIZE];
@@ -172,21 +169,6 @@ where
     }
 }
 
-// TODO: Consider using UnsafeCell to avoid runtime borrow-checking.
-fn get_real_fft_algorithm<T: FftNum, const SIZE: usize>() -> Arc<dyn RealToComplex<T>> {
-    generic_singleton::get_or_init(|| RefCell::new(PrivateWrapper(RealFftPlanner::new())))
-        .borrow_mut()
-        .0
-        .plan_fft_forward(SIZE)
-}
-
-// TODO: Consider using UnsafeCell to avoid runtime borrow-checking.
-fn get_inverse_real_fft_algorithm<T: FftNum, const SIZE: usize>() -> Arc<dyn ComplexToReal<T>> {
-    generic_singleton::get_or_init(|| RefCell::new(PrivateWrapper(RealFftPlanner::new())))
-        .borrow_mut()
-        .0
-        .plan_fft_inverse(SIZE)
-}
 #[cfg(test)]
 mod tests {
     use super::*;
