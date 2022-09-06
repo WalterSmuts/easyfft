@@ -4,7 +4,7 @@ A Rust library crate providing an [FFT] API for arrays and slices. This crate wr
 
 ### Advantages
 * If it compiles, your code **won't panic™** in this library[^panic]
-* No [Result] return type for you to worry about
+* No [Result] return type for you to worry about, you simply cannot get an [Error]
 * Ergonomic API
 
 ### Current limitations
@@ -77,4 +77,5 @@ errors.
 [arrays]: https://doc.rust-lang.org/std/primitive.array.html
 [generic_const_exprs]: https://github.com/rust-lang/rust/issues/76560
 [Result]: https://doc.rust-lang.org/std/result/enum.Result.html
+[Error]: https://doc.rust-lang.org/std/result/enum.Result.html#variant.Err
 [realfft module]: https://docs.rs/easyfft/latest/easyfft/realfft/index.html
