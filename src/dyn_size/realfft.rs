@@ -43,7 +43,6 @@ pub trait DynRealIfft<T> {
     fn real_ifft(&self) -> Box<[T]>;
 }
 
-// TODO: Define constructor for creating this type manually
 /// The result of calling [`DynRealFft::real_fft`].
 ///
 /// As [explained] by the author of the [realfft crate], a real valued signal can have some
@@ -70,6 +69,42 @@ pub trait DynRealIfft<T> {
 pub struct DynRealDft<T> {
     original_length: usize,
     inner: Box<[Complex<T>]>,
+}
+
+impl<T: Default + Copy> DynRealDft<T> {
+    /// Create a new `DynRealDft` struct.
+    ///
+    /// You need to provide the size of the real-valued signal you expect it to produce as a
+    /// function arguement.
+    ///
+    /// # Panics
+    /// Panics if the `original_length / 2 + 1` is not equal to `frequency_bins.len() + 1`.
+    ///
+    /// If you don't like the idea of your code possibly panicking, consider using the
+    /// [`crate::const_size::realfft`] module instead.
+    /// ```
+    /// use easyfft::dyn_size::realfft::DynRealDft;
+    /// use easyfft::dyn_size::realfft::DynRealIfft;
+    /// use easyfft::Complex;
+    ///
+    /// // Initialize a DynRealDft struct that would produce an signal of length 4 after calling real_ifft().
+    /// let real_dft_4 = DynRealDft::new(10.0, &[Complex::new(1.0, 2.0), Complex::default()], 4);
+    /// assert_eq!(real_dft_4.real_ifft().len(), 4);
+    /// // Initialize a DynRealDft struct that would produce an signal of length 5 after calling real_ifft().
+    /// let real_dft_5 = DynRealDft::new(10.0, &[Complex::new(1.0, 2.0), Complex::default()], 5);
+    /// assert_eq!(real_dft_5.real_ifft().len(), 5);
+    /// ```
+    pub fn new(zeroth_bin: T, frequency_bins: &[Complex<T>], original_length: usize) -> Self {
+        // TODO: Remove unnesasary initialization
+        assert_eq!(original_length / 2 + 1, frequency_bins.len() + 1);
+        let mut inner = vec![Complex::default(); original_length / 2 + 1];
+        inner[0] = Complex::new(zeroth_bin, T::default());
+        inner[1..frequency_bins.len() + 1].copy_from_slice(frequency_bins);
+        Self {
+            original_length,
+            inner: inner.into_boxed_slice(),
+        }
+    }
 }
 
 impl<T> Deref for DynRealDft<T> {

@@ -3,7 +3,7 @@ A Rust library crate providing an [FFT] API for arrays and slices. This crate wr
 [rustfft] and [realfft] crates that does the heavy lifting behind the scenes.
 
 ### Advantages
-* If it compiles, your code **won't panic™** in this library[^panic]
+* If it compiles, your code **won't panic™** in this library[^panic][^dyn_real_dft_panic]
 * No [Result] return type for you to worry about, you simply cannot get an [Error]
 * Ergonomic API
 
@@ -70,6 +70,11 @@ fn main() {
 There could be other bugs in this crate or it's dependencies that may cause a
 panic, but in theory all the runtime panics have been moved to compile time
 errors.
+[^dyn_real_dft_panic]: The `DynRealDft` struct's associated `new` method can
+panic. This method was added for convenience, but does kinda ruin my "no-panic"
+philosophy. If you REALLY want to be safe I reccomend you use the `const_size`
+module (which won't panic) if possible, otherwise rather create a the
+`DynRealDft` using a time-domain signal and calling the `.real_ifft()` method.
 
 [FFT]: https://en.wikipedia.org/wiki/Fast_Fourier_transform
 [rustfft]: https://docs.rs/rustfft/latest/rustfft/

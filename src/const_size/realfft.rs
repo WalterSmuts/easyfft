@@ -57,7 +57,6 @@ pub trait RealIfft<T, const SIZE: usize> {
     fn real_ifft(&self) -> [T; SIZE];
 }
 
-// TODO: Define constructor for creating this type manually
 /// The result of calling [`RealFft::real_fft`].
 ///
 /// As [explained] by the author of the [realfft crate], a real valued signal can have some
@@ -86,6 +85,39 @@ where
     [T; SIZE / 2 + 1]: Sized,
 {
     inner: [Complex<T>; SIZE / 2 + 1],
+}
+
+impl<T: Default + Copy, const SIZE: usize> RealDft<T, SIZE>
+where
+    [T; SIZE / 2 + 1]: Sized,
+{
+    /// Create a new `RealDft` struct.
+    ///
+    /// You need to provide the size of the real-valued signal you expect it to produce as a
+    /// generic arguement unless it can infer from context.
+    ///
+    /// ```
+    /// #![allow(incomplete_features)]
+    /// #![feature(generic_const_exprs)]
+    /// use easyfft::const_size::realfft::RealDft;
+    /// use easyfft::const_size::realfft::RealIfft;
+    /// use easyfft::Complex;
+    ///
+    /// // Initialize a RealDft struct that would produce an signal of length 4 when calling real_ifft().
+    /// let real_dft_4 = RealDft::<_, 4>::new(10.0, [Complex::new(1.0, 2.0)]);
+    /// assert_eq!(real_dft_4.real_ifft().len(), 4);
+    /// // Initialize a RealDft struct that would produce an signal of length 5 when calling real_ifft()
+    /// let real_dft_5 = RealDft::<_, 5>::new(10.0, [Complex::new(1.0, 2.0)]);
+    /// assert_eq!(real_dft_5.real_ifft().len(), 5);
+    /// ```
+    pub fn new(zeroth_bin: T, frequency_bins: [Complex<T>; SIZE / 2 - 1]) -> Self {
+        // TODO: See if you can fix the array_append crate and use that instead. This should remove
+        // unnesasary initialization.
+        let mut inner = [Complex::default(); SIZE / 2 + 1];
+        inner[0] = Complex::new(zeroth_bin, T::default());
+        inner[1..frequency_bins.len() + 1].copy_from_slice(&frequency_bins);
+        Self { inner }
+    }
 }
 
 impl<T, const SIZE: usize> Deref for RealDft<T, SIZE>
