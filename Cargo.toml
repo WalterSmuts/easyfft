@@ -25,7 +25,6 @@ array-init = "2.0.1"
 generic_singleton = "0.1.2"
 realfft = { version = "3.0.1"}
 rustfft = "6.0.1"
-typemap = "0.3.3"
 
 [dev-dependencies]
 approx = "0.5.1"
