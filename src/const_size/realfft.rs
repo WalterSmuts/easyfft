@@ -33,9 +33,12 @@
 //! ```
 //! [`generic_const_exprs`]: https://github.com/rust-lang/rust/issues/76560
 
+use realfft::num_traits::NumAssign;
 use rustfft::num_complex::Complex;
 use rustfft::FftNum;
 use std::ops::Deref;
+use std::ops::Mul;
+use std::ops::MulAssign;
 
 use crate::get_inverse_real_fft_algorithm;
 use crate::get_real_fft_algorithm;
@@ -128,6 +131,34 @@ where
 
     fn deref(&self) -> &Self::Target {
         &self.inner
+    }
+}
+
+impl<T: Default + FftNum, const SIZE: usize> Mul for &RealDft<T, SIZE>
+where
+    [T; SIZE / 2 + 1]: Sized,
+{
+    type Output = RealDft<T, SIZE>;
+
+    fn mul(self, rhs: Self) -> Self::Output {
+        #[allow(clippy::suspicious_arithmetic_impl)]
+        // TODO: Remove unnesasary initialization
+        let mut inner = [Complex::default(); SIZE / 2 + 1];
+        for (index, bin) in inner.iter_mut().enumerate() {
+            *bin = self[index] * rhs[index];
+        }
+        RealDft { inner }
+    }
+}
+
+impl<T: Default + FftNum + NumAssign, const SIZE: usize> MulAssign<&Self> for RealDft<T, SIZE>
+where
+    [T; SIZE / 2 + 1]: Sized,
+{
+    fn mul_assign(&mut self, rhs: &Self) {
+        for (bin_self, bin_rhs) in self.inner.iter_mut().zip(rhs.iter()) {
+            *bin_self *= bin_rhs;
+        }
     }
 }
 

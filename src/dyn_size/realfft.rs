@@ -22,9 +22,12 @@
 //!     assert_ulps_eq!(*manipulated, original * 10.0);
 //! }
 //! ```
+use realfft::num_traits::NumAssign;
 use rustfft::num_complex::Complex;
 use rustfft::FftNum;
 use std::ops::Deref;
+use std::ops::Mul;
+use std::ops::MulAssign;
 
 use crate::get_inverse_real_fft_algorithm;
 use crate::get_real_fft_algorithm;
@@ -112,6 +115,31 @@ impl<T> Deref for DynRealDft<T> {
 
     fn deref(&self) -> &Self::Target {
         &self.inner
+    }
+}
+
+impl<T: Default + FftNum> Mul for &DynRealDft<T> {
+    type Output = DynRealDft<T>;
+
+    fn mul(self, rhs: Self) -> Self::Output {
+        assert_eq!(self.len(), rhs.len());
+        let mut inner = Vec::with_capacity(self.len());
+        for index in 0..self.len() {
+            inner.push(self[index] * rhs[index]);
+        }
+        DynRealDft {
+            inner: inner.into_boxed_slice(),
+            original_length: self.original_length,
+        }
+    }
+}
+
+impl<T: Default + FftNum + NumAssign> MulAssign<&Self> for DynRealDft<T> {
+    fn mul_assign(&mut self, rhs: &Self) {
+        assert_eq!(self.len(), rhs.len());
+        for (bin_self, bin_rhs) in self.inner.iter_mut().zip(rhs.iter()) {
+            *bin_self *= bin_rhs;
+        }
     }
 }
 
