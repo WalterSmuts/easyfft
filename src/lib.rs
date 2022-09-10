@@ -5,6 +5,13 @@
 #![doc = include_str!("../README.md")]
 #![cfg_attr(feature = "const-realfft", allow(incomplete_features))]
 #![cfg_attr(feature = "const-realfft", feature(generic_const_exprs))]
+#![warn(clippy::pedantic)]
+// We do many casts from usize to f64. This is what triggers this lint. Casting here is fine
+// because the usize represents an index in an fft object. In practice these objects will NEVER be
+// even close to having 32 bits represent the number of indices.
+#![allow(clippy::cast_precision_loss)]
+// The pattern `SIZE / 2 + 1` is common in this code. Removing the trailing `+ 1` is confusing.
+#![allow(clippy::range_plus_one)]
 
 #[rustfmt::skip]
 use ::realfft::ComplexToReal;

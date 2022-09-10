@@ -122,7 +122,7 @@ mod tests {
 
     //TODO: Figure out why this error creeps in and if there is an appropriate constant already
     // defined.
-    const ACCEPTABLE_ERROR: f64 = 0.00000000000001;
+    const ACCEPTABLE_ERROR: f64 = 0.000_000_000_000_01;
 
     fn fft_and_ifft_are_inverse_operations<const SIZE: usize>(array: [f64; SIZE]) {
         let converted: Vec<_> = array

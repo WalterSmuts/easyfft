@@ -4,7 +4,7 @@
 //! Unfortunately this module depends on the unstable [`generic_const_exprs`] feature of rust. That
 //! means you can only use it via the nightly compiler. Once [`generic_const_exprs`] lands in
 //! stable, this requirement will be lifted. For now I've feature-gated the
-//! [crate::const_size::realfft]  module so you need to explicitly enable it in your `Cargo.toml`:
+//! [`crate::const_size::realfft`]  module so you need to explicitly enable it in your `Cargo.toml`:
 //! ```toml
 //! easyfft = { version = "LATEST_VERSION", features = ["const-realfft"] }
 //! ```
@@ -58,7 +58,7 @@ pub trait RealIfft<T, const SIZE: usize> {
 }
 
 // TODO: Define constructor for creating this type manually
-/// The result of calling [RealFft::real_fft].
+/// The result of calling [`RealFft::real_fft`].
 ///
 /// As [explained] by the author of the [realfft crate], a real valued signal can have some
 /// optimizations applied when calculating it's [discrete fourier transform]. This involves only
@@ -72,7 +72,7 @@ pub trait RealIfft<T, const SIZE: usize> {
 /// determined by the type of the DFT.
 ///
 /// The solution is to wrap the array in a different type which contains extra type information.
-/// This newly created type is the [RealDft] and has the same memory representation as our original
+/// This newly created type is the [`RealDft`] and has the same memory representation as our original
 /// type, but is blessed with the knowledge of its origins.
 ///
 /// [explained]: https://docs.rs/realfft/latest/realfft/index.html#real-to-complex
@@ -105,6 +105,7 @@ where
 {
     /// Get a reference to an array of all the frequency bins excluding the first (and, if the
     /// original signal has an even number of samples, last) bin(s).
+    #[allow(clippy::missing_panics_doc)]
     pub fn get_frequency_bins(&mut self) -> &[Complex<T>; (SIZE - 1) / 2] {
         // TODO: Consider an unchecked unwrap
         (&self.inner[1..(SIZE - 1) / 2]).try_into().unwrap()
@@ -112,6 +113,7 @@ where
 
     /// Get a mutable reference to an array of all the frequency bins excluding the first (and, if
     /// the original signal has an even number of samples, last) bin(s).
+    #[allow(clippy::missing_panics_doc)]
     pub fn get_frequency_bins_mut(&mut self) -> &mut [Complex<T>; (SIZE - 1) / 2] {
         // TODO: Consider an unchecked unwrap
         (&mut self.inner[1..(SIZE - 1) / 2]).try_into().unwrap()
@@ -178,7 +180,7 @@ mod tests {
 
     //TODO: Figure out why this error creeps in and if there is an appropriate constant already
     // defined.
-    const ACCEPTABLE_ERROR: f64 = 0.00000000000001;
+    const ACCEPTABLE_ERROR: f64 = 0.000_000_000_000_01;
 
     fn real_fft_and_real_ifft_are_inverse_operations<const SIZE: usize>(array: [f64; SIZE])
     where

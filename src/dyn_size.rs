@@ -63,7 +63,7 @@ impl<T: FftNum + Default> DynFft<T> for [T] {
         // TODO: Remove unnesasary initialization
         let mut buffer = Vec::with_capacity(self.len());
         for sample in self {
-            buffer.push(Complex::new(*sample, T::default()))
+            buffer.push(Complex::new(*sample, T::default()));
         }
 
         crate::get_fft_algorithm::<T>(self.len()).process(&mut buffer);
@@ -76,7 +76,7 @@ impl<T: FftNum + Default> DynFft<T> for [Complex<T>] {
         // TODO: Remove unnesasary initialization
         let mut buffer = Vec::with_capacity(self.len());
         for _ in 0..self.len() {
-            buffer.push(Complex::default())
+            buffer.push(Complex::default());
         }
 
         buffer.clone_from_slice(self);
@@ -91,7 +91,7 @@ impl<T: FftNum + Default> DynIfft<T> for [Complex<T>] {
         // TODO: Remove unnesasary initialization
         let mut buffer = Vec::with_capacity(self.len());
         for _ in 0..self.len() {
-            buffer.push(Complex::default())
+            buffer.push(Complex::default());
         }
         buffer.copy_from_slice(self);
         crate::get_inverse_fft_algorithm::<T>(self.len()).process(&mut buffer);

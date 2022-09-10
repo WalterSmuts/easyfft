@@ -44,7 +44,7 @@ pub trait DynRealIfft<T> {
 }
 
 // TODO: Define constructor for creating this type manually
-/// The result of calling [DynRealFft::real_fft].
+/// The result of calling [`DynRealFft::real_fft`].
 ///
 /// As [explained] by the author of the [realfft crate], a real valued signal can have some
 /// optimizations applied when calculating it's [discrete fourier transform]. This involves only
@@ -58,7 +58,7 @@ pub trait DynRealIfft<T> {
 /// determine the appropriate inverse.
 ///
 /// The solution is to wrap the array in a different type which contains extra type information.
-/// This newly created type is the [DynRealDft] and has an extra field indicating which sized
+/// This newly created type is the [`DynRealDft`] and has an extra field indicating which sized
 /// signal was used to create it.
 ///
 /// [explained]: https://docs.rs/realfft/latest/realfft/index.html#real-to-complex
@@ -83,6 +83,7 @@ impl<T> Deref for DynRealDft<T> {
 impl<T> DynRealDft<T> {
     /// Get a slice of all the frequency bins excluding the first (and, if the original signal has
     /// an even number of samples, last) bin(s).
+    #[must_use]
     pub fn get_frequency_bins(&self) -> &[Complex<T>] {
         // TODO: Consider an unchecked unwrap
         let wanted_len = self.original_length - 1;
@@ -99,6 +100,7 @@ impl<T> DynRealDft<T> {
 
     /// Get an immutable reference to the constant offset of the signal, i.e. the zeroth frequency
     /// bin.
+    #[must_use]
     pub fn get_offset(&self) -> &T {
         &self.inner[0].re
     }
@@ -162,7 +164,7 @@ mod tests {
 
     //TODO: Figure out why this error creeps in and if there is an appropriate constant already
     // defined.
-    const ACCEPTABLE_ERROR: f64 = 0.00000000000001;
+    const ACCEPTABLE_ERROR: f64 = 0.000_000_000_000_01;
 
     fn real_fft_and_real_ifft_are_inverse_operations(array: &[f64]) {
         let converted: Vec<_> = array
