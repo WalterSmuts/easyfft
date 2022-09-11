@@ -3,7 +3,8 @@ A Rust library crate providing an [FFT] API for arrays and slices. This crate wr
 [rustfft] and [realfft] crates that does the heavy lifting behind the scenes.
 
 ### Advantages
-* If it compiles, your code **won't panic™** in this library[^panic][^dyn_real_dft_panic]
+* If it compiles, your code **won't panic™** in this library[^panic], unless
+  you enable the fallible[^fallible] feature
 * No [Result] return type for you to worry about, you simply cannot get an [Error]
 * Ergonomic API
 
@@ -70,11 +71,18 @@ fn main() {
 There could be other bugs in this crate or it's dependencies that may cause a
 panic, but in theory all the runtime panics have been moved to compile time
 errors.
-[^dyn_real_dft_panic]: The `DynRealDft` struct's associated `new` method can
-panic. This method was added for convenience, but does kinda ruin my "no-panic"
-philosophy. If you REALLY want to be safe I reccomend you use the `const_size`
-module (which won't panic) if possible, otherwise rather create a the
-`DynRealDft` using a time-domain signal and calling the `.real_ifft()` method.
+
+[^fallible]: The `DynRealDft` struct has some associated operations which can
+panic. This is because the rust language does not have the ability to encode
+properties of the length of slices in the type system. This might become
+possible in the future if the rust team manages to extend const generics to
+fully fledged [dependent types]. For now, we're limited to using arrays where
+we can ensure these properties. You can opt into these panic-able operations
+via the `fallible` feature flag. This brings slices up to feature parity with
+arrays, but you opt out of the "**won't panic™**" guarantee of this crate. I do
+recommend you take a step back and consider if you REALLY need to work with
+slices instead of arrays. Many applications can get away with knowing the size
+of their signal at compile time.
 
 [FFT]: https://en.wikipedia.org/wiki/Fast_Fourier_transform
 [rustfft]: https://docs.rs/rustfft/latest/rustfft/
@@ -84,3 +92,4 @@ module (which won't panic) if possible, otherwise rather create a the
 [Result]: https://doc.rust-lang.org/std/result/enum.Result.html
 [Error]: https://doc.rust-lang.org/std/result/enum.Result.html#variant.Err
 [realfft module]: https://docs.rs/easyfft/latest/easyfft/realfft/index.html
+[dependent types]: https://en.wikipedia.org/wiki/Dependent_type
