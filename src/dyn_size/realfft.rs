@@ -22,11 +22,14 @@
 //!     assert_ulps_eq!(*manipulated, original * 10.0);
 //! }
 //! ```
+#[cfg(feature = "fallible")]
 use realfft::num_traits::NumAssign;
 use rustfft::num_complex::Complex;
 use rustfft::FftNum;
 use std::ops::Deref;
+#[cfg(feature = "fallible")]
 use std::ops::Mul;
+#[cfg(feature = "fallible")]
 use std::ops::MulAssign;
 
 use crate::get_inverse_real_fft_algorithm;
@@ -74,11 +77,12 @@ pub struct DynRealDft<T> {
     inner: Box<[Complex<T>]>,
 }
 
+#[cfg(feature = "fallible")]
 impl<T: Default + Copy> DynRealDft<T> {
     /// Create a new `DynRealDft` struct.
     ///
     /// You need to provide the size of the real-valued signal you expect it to produce as a
-    /// function arguement.
+    /// function arguement. Requires the `fallible` feature.
     ///
     /// # Panics
     /// Panics if the `original_length / 2 + 1` is not equal to `frequency_bins.len() + 1`.
@@ -118,6 +122,7 @@ impl<T> Deref for DynRealDft<T> {
     }
 }
 
+#[cfg(feature = "fallible")]
 impl<T: Default + FftNum> Mul for &DynRealDft<T> {
     type Output = DynRealDft<T>;
 
@@ -134,6 +139,7 @@ impl<T: Default + FftNum> Mul for &DynRealDft<T> {
     }
 }
 
+#[cfg(feature = "fallible")]
 impl<T: Default + FftNum + NumAssign> MulAssign<&Self> for DynRealDft<T> {
     fn mul_assign(&mut self, rhs: &Self) {
         assert_eq!(self.len(), rhs.len());
