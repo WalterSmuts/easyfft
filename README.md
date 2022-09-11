@@ -27,43 +27,41 @@ use easyfft::dyn_size::realfft::*;
 use easyfft::dyn_size::*;
 use easyfft::*;
 
-fn main() {
-    // Complex arrays
-    let complex_array = [Complex::new(1.0, 0.0); 100];
-    let complex_array_dft = complex_array.fft();
-    let _complex_array_dft_idft = complex_array_dft.ifft();
+// Complex arrays
+let complex_array = [Complex::new(1.0, 0.0); 100];
+let complex_array_dft = complex_array.fft();
+let _complex_array_dft_idft = complex_array_dft.ifft();
 
-    // Real to complex arrays
-    let real_array = [1.0; 100];
-    let _real_array_dft = real_array.fft();
+// Real to complex arrays
+let real_array = [1.0; 100];
+let _real_array_dft = real_array.fft();
 
-    // // Real arrays
-    // let real_array = [1.0; 100];
-    // let real_array_dft = real_array.real_fft();
-    // let _real_array_dft_idft = real_array_dft.real_ifft();
+// // Real arrays
+// let real_array = [1.0; 100];
+// let real_array_dft = real_array.real_fft();
+// let _real_array_dft_idft = real_array_dft.real_ifft();
 
-    // Complex slices
-    let complex_slice: &[_] = &[Complex::new(1.0, 0.0); 100];
-    let complex_slice_dft = complex_slice.fft();
-    let _complex_slice_dft_idft = complex_slice_dft.ifft();
+// Complex slices
+let complex_slice: &[_] = &[Complex::new(1.0, 0.0); 100];
+let complex_slice_dft = complex_slice.fft();
+let _complex_slice_dft_idft = complex_slice_dft.ifft();
 
-    // Real to complex slices
-    let real_slice: &[_] = &[1.0; 100];
-    let _real_slice_dft = real_slice.fft();
+// Real to complex slices
+let real_slice: &[_] = &[1.0; 100];
+let _real_slice_dft = real_slice.fft();
 
-    // Real slices
-    let real_slice: &[_] = &[1.0; 100];
-    let real_slice_dft = real_slice.real_fft();
-    let _real_slice_dft_idft = real_slice_dft.real_ifft();
+// Real slices
+let real_slice: &[_] = &[1.0; 100];
+let real_slice_dft = real_slice.real_fft();
+let _real_slice_dft_idft = real_slice_dft.real_ifft();
 
-    // In-place mutation on complex -> complex transforms
-    let mut complex_slice = [Complex::new(1.0, 0.0); 100];
-    complex_slice.fft_mut();
-    complex_slice.ifft_mut();
-    let mut complex_array = [Complex::new(1.0, 0.0); 100];
-    complex_array.fft_mut();
-    complex_array.ifft_mut();
-}
+// In-place mutation on complex -> complex transforms
+let mut complex_slice = [Complex::new(1.0, 0.0); 100];
+complex_slice.fft_mut();
+complex_slice.ifft_mut();
+let mut complex_array = [Complex::new(1.0, 0.0); 100];
+complex_array.fft_mut();
+complex_array.ifft_mut();
 ```
 
 #### Footnotes
