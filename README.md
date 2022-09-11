@@ -4,7 +4,7 @@ A Rust library crate providing an [FFT] API for arrays and slices. This crate wr
 
 ### Advantages
 * If it compiles, your code **won't panic™** in this library[^panic], unless
-  you enable the fallible[^fallible] feature
+  you enable the `fallible`[^fallible] feature
 * No [Result] return type for you to worry about, you simply cannot get an [Error]
 * Ergonomic API
 
