@@ -115,7 +115,8 @@ where
     /// ```
     pub fn new(zeroth_bin: T, frequency_bins: [Complex<T>; SIZE / 2]) -> Self {
         // TODO: See if you can fix the array_append crate and use that instead. This should remove
-        // unnesasary initialization.
+        // unnesasary initialization. Pending on issue:
+        // https://github.com/rust-lang/rust/issues/101849
         let mut inner = [Complex::default(); SIZE / 2 + 1];
         inner[0] = Complex::new(zeroth_bin, T::default());
         inner[1..frequency_bins.len() + 1].copy_from_slice(&frequency_bins);
