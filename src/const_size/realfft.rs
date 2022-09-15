@@ -107,13 +107,13 @@ where
     /// use easyfft::Complex;
     ///
     /// // Initialize a RealDft struct that would produce an signal of length 4 when calling real_ifft().
-    /// let real_dft_4 = RealDft::<_, 4>::new(10.0, [Complex::new(1.0, 2.0)]);
+    /// let real_dft_4 = RealDft::<_, 4>::new(10.0, [Complex::new(1.0, 2.0), Complex::default()]);
     /// assert_eq!(real_dft_4.real_ifft().len(), 4);
     /// // Initialize a RealDft struct that would produce an signal of length 5 when calling real_ifft()
-    /// let real_dft_5 = RealDft::<_, 5>::new(10.0, [Complex::new(1.0, 2.0)]);
+    /// let real_dft_5 = RealDft::<_, 5>::new(10.0, [Complex::new(1.0, 2.0), Complex::default()]);
     /// assert_eq!(real_dft_5.real_ifft().len(), 5);
     /// ```
-    pub fn new(zeroth_bin: T, frequency_bins: [Complex<T>; SIZE / 2 - 1]) -> Self {
+    pub fn new(zeroth_bin: T, frequency_bins: [Complex<T>; SIZE / 2]) -> Self {
         // TODO: See if you can fix the array_append crate and use that instead. This should remove
         // unnesasary initialization.
         let mut inner = [Complex::default(); SIZE / 2 + 1];
