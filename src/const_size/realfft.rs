@@ -170,7 +170,8 @@ where
     /// original signal has an even number of samples, last) bin(s).
     #[allow(clippy::missing_panics_doc)]
     pub fn get_frequency_bins(&mut self) -> &[Complex<T>; (SIZE - 1) / 2] {
-        // TODO: Consider an unchecked unwrap
+        // TODO: Use sub-array once features are implemented
+        // https://github.com/Cryptjar/sub-array/issues/1
         (&self.inner[1..(SIZE - 1) / 2]).try_into().unwrap()
     }
 
@@ -178,7 +179,8 @@ where
     /// the original signal has an even number of samples, last) bin(s).
     #[allow(clippy::missing_panics_doc)]
     pub fn get_frequency_bins_mut(&mut self) -> &mut [Complex<T>; (SIZE - 1) / 2] {
-        // TODO: Consider an unchecked unwrap
+        // TODO: Use sub-array once features are implemented
+        // https://github.com/Cryptjar/sub-array/issues/1
         (&mut self.inner[1..(SIZE - 1) / 2]).try_into().unwrap()
     }
 
@@ -215,7 +217,15 @@ where
         let mut output = [Complex::default(); SIZE / 2 + 1];
 
         // TODO: remove this clone
-        r2c.process(&mut self.clone(), &mut output).unwrap();
+        //
+        // SAFETY:
+        // The error case only happens when the size of the input and output and fft algorithm are
+        // not consistent. Since all these are calculated inside this function and have been double
+        // checked and tested, we can be sure they won't be inconsistent.
+        unsafe {
+            r2c.process(&mut self.clone(), &mut output)
+                .unwrap_unchecked();
+        }
         RealDft { inner: output }
     }
 }
@@ -229,7 +239,14 @@ where
 
         // TODO: Remove default dependency and unnesasary initialization
         let mut output = [T::default(); SIZE];
-        c2r.process(&mut (*self).clone(), &mut output).unwrap();
+        // SAFETY:
+        // The error case only happens when the size of the input and output and fft algorithm are
+        // not consistent. Since all these are calculated inside this function and have been double
+        // checked and tested, we can be sure they won't be inconsistent.
+        unsafe {
+            c2r.process(&mut (*self).clone(), &mut output)
+                .unwrap_unchecked();
+        }
         output
     }
 }

@@ -154,7 +154,6 @@ impl<T> DynRealDft<T> {
     /// an even number of samples, last) bin(s).
     #[must_use]
     pub fn get_frequency_bins(&self) -> &[Complex<T>] {
-        // TODO: Consider an unchecked unwrap
         let wanted_len = self.original_length - 1;
         &self.inner[1..wanted_len / 2]
     }
@@ -162,7 +161,6 @@ impl<T> DynRealDft<T> {
     /// Get a mutable slice of all the frequency bins excluding the first (and, if the original
     /// signal has an even number of samples, last) bin(s).
     pub fn get_frequency_bins_mut(&mut self) -> &mut [Complex<T>] {
-        // TODO: Consider an unchecked unwrap
         let wanted_len = self.original_length - 1;
         &mut self.inner[1..wanted_len / 2]
     }
@@ -197,8 +195,14 @@ impl<T: FftNum + Default> DynRealFft<T> for [T] {
             output.push(Complex::default());
         }
 
-        // TODO: Consider an unchecked unwrap
-        r2c.process(&mut self.to_vec(), &mut output).unwrap();
+        // SAFETY:
+        // The error case only happens when the size of the input and output and fft algorithm are
+        // not consistent. Since all these are calculated inside this function and have been double
+        // checked and tested, we can be sure they won't be inconsistent.
+        unsafe {
+            r2c.process(&mut self.to_vec(), &mut output)
+                .unwrap_unchecked();
+        }
         DynRealDft {
             inner: output.into_boxed_slice(),
             original_length: self.len(),
@@ -214,12 +218,17 @@ impl<T: FftNum + Default> DynRealIfft<T> for DynRealDft<T> {
         for _ in 0..self.original_length {
             output.push(T::default());
         }
-        // TODO: Consider an unchecked unwrap
-        c2r.process(
-            &mut Into::<Box<[Complex<T>]>>::into(self.clone()),
-            &mut output,
-        )
-        .unwrap();
+        // SAFETY:
+        // The error case only happens when the size of the input and output and fft algorithm are
+        // not consistent. Since all these are calculated inside this function and have been double
+        // checked and tested, we can be sure they won't be inconsistent.
+        unsafe {
+            c2r.process(
+                &mut Into::<Box<[Complex<T>]>>::into(self.clone()),
+                &mut output,
+            )
+            .unwrap_unchecked();
+        }
         output.into_boxed_slice()
     }
 }
