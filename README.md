@@ -66,9 +66,8 @@ complex_array.ifft_mut();
 
 #### Footnotes
 [^panic]: While this could be true in theory, in practice it most probably is not.
-There could be other bugs in this crate or it's dependencies that may cause a
-panic, but in theory all the runtime panics have been moved to compile time
-errors.
+There could be bugs in this crate or it's dependencies that may cause a panic,
+but in theory all the runtime panics have been moved to compile time errors.
 
 [^fallible]: The `DynRealDft` struct has some associated operations which can
 panic. This is because the rust language does not have the ability to encode
