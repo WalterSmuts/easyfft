@@ -102,11 +102,8 @@ impl<T: Default + Copy> DynRealDft<T> {
     /// assert_eq!(real_dft_5.real_ifft().len(), 5);
     /// ```
     pub fn new(zeroth_bin: T, frequency_bins: &[Complex<T>], original_length: usize) -> Self {
-        // TODO: Remove unnesasary initialization
         assert_eq!(original_length / 2 + 1, frequency_bins.len() + 1);
-        let mut inner = vec![Complex::default(); original_length / 2 + 1];
-        inner[0] = Complex::new(zeroth_bin, T::default());
-        inner[1..frequency_bins.len() + 1].copy_from_slice(frequency_bins);
+        let inner = [&[Complex::new(zeroth_bin, T::default())], frequency_bins].concat();
         Self {
             original_length,
             inner: inner.into_boxed_slice(),
