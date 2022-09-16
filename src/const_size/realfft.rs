@@ -33,6 +33,7 @@
 //! ```
 //! [`generic_const_exprs`]: https://github.com/rust-lang/rust/issues/76560
 
+use array_init::array_init;
 use realfft::num_traits::NumAssign;
 use rustfft::num_complex::Complex;
 use rustfft::FftNum;
@@ -135,19 +136,18 @@ where
     }
 }
 
-impl<T: Default + FftNum, const SIZE: usize> Mul for &RealDft<T, SIZE>
+impl<T: FftNum, const SIZE: usize> Mul for &RealDft<T, SIZE>
 where
     [T; SIZE / 2 + 1]: Sized,
 {
     type Output = RealDft<T, SIZE>;
 
     fn mul(self, rhs: Self) -> Self::Output {
-        #[allow(clippy::suspicious_arithmetic_impl)]
-        // TODO: Remove unnesasary initialization
-        let mut inner = [Complex::default(); SIZE / 2 + 1];
-        for (index, bin) in inner.iter_mut().enumerate() {
-            *bin = self[index] * rhs[index];
-        }
+        // TODO: Consider using a ConstSizeIterator and submitting this pattern to array_init.
+        let inner =
+        // SAFETY:
+        // The size of the arrays are checked at compile time.
+            array_init(|index| unsafe { self.get_unchecked(index) * rhs.get_unchecked(index) });
         RealDft { inner }
     }
 }
