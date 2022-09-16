@@ -187,10 +187,7 @@ impl<T: FftNum + Default> DynRealFft<T> for [T] {
         let r2c = get_real_fft_algorithm::<T>(self.len());
 
         // TODO: Remove default dependency and unnesasary initialization
-        let mut output = Vec::with_capacity(self.len() / 2 + 1);
-        for _ in 0..self.len() / 2 + 1 {
-            output.push(Complex::default());
-        }
+        let mut output = vec![Complex::default(); self.len() / 2 + 1];
 
         // SAFETY:
         // The error case only happens when the size of the input and output and fft algorithm are
