@@ -28,6 +28,16 @@ pub use rustfft::FftNum;
 
 pub mod const_size;
 pub mod dyn_size;
+/// This module re-exports all the traits under a single namespace to be easily consumed.
+pub mod prelude {
+    #[cfg(feature = "const-realfft")]
+    pub use crate::const_size::realfft::*;
+
+    pub use crate::const_size::*;
+    pub use crate::dyn_size::realfft::*;
+    pub use crate::dyn_size::*;
+    pub use crate::*;
+}
 
 pub(crate) struct PrivateWrapper<T>(T);
 
