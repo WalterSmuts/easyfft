@@ -29,14 +29,33 @@ pub use rustfft::FftNum;
 pub mod const_size;
 pub mod dyn_size;
 /// This module re-exports all the traits under a single namespace to be easily consumed.
+///
+/// I generally believe glob-imports are to be avoided. There are exceptions though and I believe
+/// this is one of those situations. These traits are NOT named when used so having them named when
+/// imported does not aid understanding. See [this blog post] for more information.
+///
+/// [this blog post]: https://drs.is/post/against-globs/
 pub mod prelude {
     #[cfg(feature = "const-realfft")]
-    pub use crate::const_size::realfft::*;
+    pub use crate::const_size::realfft::RealDft;
+    #[cfg(feature = "const-realfft")]
+    pub use crate::const_size::realfft::RealFft;
+    #[cfg(feature = "const-realfft")]
+    pub use crate::const_size::realfft::RealIfft;
 
-    pub use crate::const_size::*;
-    pub use crate::dyn_size::realfft::*;
-    pub use crate::dyn_size::*;
-    pub use crate::*;
+    pub use crate::const_size::Fft;
+    pub use crate::const_size::FftMut;
+    pub use crate::const_size::Ifft;
+    pub use crate::const_size::IfftMut;
+
+    pub use crate::dyn_size::realfft::DynRealDft;
+    pub use crate::dyn_size::realfft::DynRealFft;
+    pub use crate::dyn_size::realfft::DynRealIfft;
+
+    pub use crate::dyn_size::DynFft;
+    pub use crate::dyn_size::DynFftMut;
+    pub use crate::dyn_size::DynIfft;
+    pub use crate::dyn_size::DynIfftMut;
 }
 
 pub(crate) struct PrivateWrapper<T>(T);
