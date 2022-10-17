@@ -68,9 +68,9 @@ pub trait RealIfft<T, const SIZE: usize> {
 /// returning half the complex frequency domain signal since the other half can be inferred because
 /// the DFT of a real signal is [known to be symmetric]. This poses a problem when attempting to do
 /// the inverse discrete fourier transform since a signal of type `[Xr; SIZE]` would return a
-/// complex signal of type `Complex<Xre, Xim>; SIZE / 2 - 1]`. Note that `[_; SIZE]` gets mapped to
-/// `[_; SIZE / 2 + 1]` and the index of an array is a natural number, so we're working with lossy
-/// integer division here. Specifically, observe that __BOTH__ a signal of type `[_; 5]` and
+/// complex signal of type `[Complex<Xre, Xim>; SIZE / 2 - 1]`. Note that `[_; SIZE]` gets mapped
+/// to `[_; SIZE / 2 + 1]` and the index of an array is a natural number, so we're working with
+/// lossy integer division here. Specifically, observe that __BOTH__ a signal of type `[_; 5]` and
 /// `[_; 4]` would be mapped to a DFT of type `[_; 3]`. This means the IDFT cannot be unambiguously
 /// determined by the type of the DFT.
 ///
