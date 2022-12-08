@@ -2,12 +2,6 @@
 A Rust library crate providing an [FFT] API for arrays and slices. This crate wraps the
 [rustfft] and [realfft] crates that does the heavy lifting behind the scenes.
 
-### Advantages
-* If it compiles, your code **won't panic™** in this library[^panic], unless
-  you enable the `fallible`[^fallible] feature
-* No [Result] return type for you to worry about, you simply cannot get an [Error]
-* Ergonomic API
-
 ### Current limitations
 * The `const-realfft` feature requires the `nightly` compiler because it depends on
   the [generic_const_exprs] feature
@@ -61,22 +55,23 @@ complex_array.fft_mut();
 complex_array.ifft_mut();
 ```
 
+### The `fallible` feature
+The `DynRealDft` struct has some associated operations which can panic. This is
+because the rust language does not have the ability to encode properties of the
+length of slices in the type system. This might become possible in the future
+if the rust team manages to extend const generics to fully fledged
+[dependent types]. For now, we're limited to using arrays where we can ensure
+these properties. If safety is your primary concern I recommend you take a step
+back and consider if you REALLY need to work with slices instead of arrays.
+Many applications can get away with knowing the size of their signal at compile
+time. You can opt out of these panic-able operations by removing the `fallible`
+feature flag, which is enabled by default.
+
 #### Footnotes
 [^panic]: While this could be true in theory, in practice it most probably is not.
 There could be bugs in this crate or it's dependencies that may cause a panic,
 but in theory all the runtime panics have been moved to compile time errors.
 
-[^fallible]: The `DynRealDft` struct has some associated operations which can
-panic. This is because the rust language does not have the ability to encode
-properties of the length of slices in the type system. This might become
-possible in the future if the rust team manages to extend const generics to
-fully fledged [dependent types]. For now, we're limited to using arrays where
-we can ensure these properties. You can opt into these panic-able operations
-via the `fallible` feature flag. This brings slices up to feature parity with
-arrays, but you opt out of the "**won't panic™**" guarantee of this crate. I do
-recommend you take a step back and consider if you REALLY need to work with
-slices instead of arrays. Many applications can get away with knowing the size
-of their signal at compile time.
 
 [FFT]: https://en.wikipedia.org/wiki/Fast_Fourier_transform
 [rustfft]: https://docs.rs/rustfft/latest/rustfft/
