@@ -37,6 +37,7 @@ use array_init::array_init;
 use realfft::num_traits::NumAssign;
 use rustfft::num_complex::Complex;
 use rustfft::FftNum;
+use std::cell::UnsafeCell;
 use std::ops::Deref;
 use std::ops::Mul;
 use std::ops::MulAssign;
@@ -216,6 +217,27 @@ where
 
         // TODO: Remove default dependency and unnesasary initialization
         let mut output = [Complex::default(); SIZE / 2 + 1];
+        let scratch_buffer_pointer =
+            generic_singleton::get_or_init(|| UnsafeCell::new([Complex::default(); SIZE])).get();
+        // SAFETY:
+        // Issue:
+        // * The pointer must be properly aligned.
+        // * It must be "dereferenceable" in the sense defined in [the module documentation].
+        // * The pointer must point to an initialized instance of `T`.
+        // Proof:
+        // These invariants are all guaranteed by the generic_singleton crate.
+        //
+        // Issue:
+        // * You must enforce Rust's aliasing rules, since the returned lifetime `'a` is
+        //   arbitrarily chosen and does not necessarily reflect the actual lifetime of the data.
+        //   In particular, while this reference exists, the memory the pointer points to must
+        //   not get accessed (read or written) through any other pointer.
+        //
+        // Proof:
+        // The pointer points towards thread-local storage and is only converted to a reference in
+        // this function, without leaking references. Therefore the exclusive reference invariant
+        // should hold.
+        let scratch_buffer_ref = unsafe { scratch_buffer_pointer.as_mut().unwrap_unchecked() };
 
         // TODO: remove this clone
         //
@@ -224,7 +246,7 @@ where
         // not consistent. Since all these are calculated inside this function and have been double
         // checked and tested, we can be sure they won't be inconsistent.
         unsafe {
-            r2c.process(&mut self.clone(), &mut output)
+            r2c.process_with_scratch(&mut self.clone(), &mut output, scratch_buffer_ref)
                 .unwrap_unchecked();
         }
         RealDft { inner: output }
@@ -238,6 +260,28 @@ where
     fn real_ifft(&self) -> [T; SIZE] {
         let c2r = get_inverse_real_fft_algorithm::<T>(SIZE);
 
+        let scratch_buffer_pointer =
+            generic_singleton::get_or_init(|| UnsafeCell::new([Complex::default(); SIZE])).get();
+        // SAFETY:
+        // Issue:
+        // * The pointer must be properly aligned.
+        // * It must be "dereferenceable" in the sense defined in [the module documentation].
+        // * The pointer must point to an initialized instance of `T`.
+        // Proof:
+        // These invariants are all guaranteed by the generic_singleton crate.
+        //
+        // Issue:
+        // * You must enforce Rust's aliasing rules, since the returned lifetime `'a` is
+        //   arbitrarily chosen and does not necessarily reflect the actual lifetime of the data.
+        //   In particular, while this reference exists, the memory the pointer points to must
+        //   not get accessed (read or written) through any other pointer.
+        //
+        // Proof:
+        // The pointer points towards thread-local storage and is only converted to a reference in
+        // this function, without leaking references. Therefore the exclusive reference invariant
+        // should hold.
+        let scratch_buffer_ref = unsafe { scratch_buffer_pointer.as_mut().unwrap_unchecked() };
+
         // TODO: Remove default dependency and unnesasary initialization
         let mut output = [T::default(); SIZE];
         // SAFETY:
@@ -245,7 +289,7 @@ where
         // not consistent. Since all these are calculated inside this function and have been double
         // checked and tested, we can be sure they won't be inconsistent.
         unsafe {
-            c2r.process(&mut (*self).clone(), &mut output)
+            c2r.process_with_scratch(&mut (*self).clone(), &mut output, scratch_buffer_ref)
                 .unwrap_unchecked();
         }
         output
