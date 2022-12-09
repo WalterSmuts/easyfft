@@ -6,7 +6,7 @@ A Rust library crate providing an [FFT] API for arrays and slices. This crate wr
 * Manages the [FftPlanner] and scratch buffers for you in thread local storage.
 * Exposes extension traits on arrays and slices for terse and ergonomic
   expression of the underlying logic.
-* Implemnetation on arrays has the signal sizes verified at compile time using
+* Implementation on arrays has the signal sizes verified at compile time using
   the type checker.
 * Size calculations for real-valued signals are done for you so you can't mess
   it up.
@@ -62,7 +62,7 @@ complex_array.ifft_mut();
 
 ### Current limitations
 * The `const-realfft` feature requires the `nightly` compiler because it depends on
-  the [generic_const_exprs] feature
+  the [generic_const_exprs] feature.
 * There are no methods for in-place mutation for complex -> real or real ->
   complex transforms.
 * easyfft stores the [FftPlanner] and scratch buffer in thread local storage.
