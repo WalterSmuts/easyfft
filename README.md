@@ -2,12 +2,6 @@
 A Rust library crate providing an [FFT] API for arrays and slices. This crate wraps the
 [rustfft] and [realfft] crates that does the heavy lifting behind the scenes.
 
-### Current limitations
-* The `const-realfft` feature requires the `nightly` compiler because it depends on
-  the [generic_const_exprs] feature
-* There are no methods for in-place mutation for complex -> real or real ->
-  complex transforms.
-
 ### Example
 The `nightly` dependent features are commented out.
 ```rust
@@ -54,6 +48,12 @@ let mut complex_array = [Complex::new(1.0, 0.0); 100];
 complex_array.fft_mut();
 complex_array.ifft_mut();
 ```
+
+### Current limitations
+* The `const-realfft` feature requires the `nightly` compiler because it depends on
+  the [generic_const_exprs] feature
+* There are no methods for in-place mutation for complex -> real or real ->
+  complex transforms.
 
 ### The `fallible` feature
 The `DynRealDft` struct has some associated operations which can panic. This is
