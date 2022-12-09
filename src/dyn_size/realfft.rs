@@ -24,8 +24,12 @@
 //! ```
 #[cfg(feature = "fallible")]
 use realfft::num_traits::NumAssign;
+use realfft::ComplexToReal;
+use realfft::RealToComplex;
 use rustfft::num_complex::Complex;
 use rustfft::FftNum;
+use std::cell::UnsafeCell;
+use std::collections::HashMap;
 use std::ops::Deref;
 #[cfg(feature = "fallible")]
 use std::ops::Mul;
@@ -47,6 +51,90 @@ pub trait DynRealFft<T> {
 pub trait DynRealIfft<T> {
     /// Perform a real-valued IFFT on a signal which originally had input size `SIZE`.
     fn real_ifft(&self) -> Box<[T]>;
+}
+
+trait StaticScratchComplexToReal<T: FftNum>: ComplexToReal<T> {
+    unsafe fn process_with_static_scratch(&self, input: &mut [Complex<T>], output: &mut [T]);
+}
+
+// The caller needs to ensure the following holds: input_length == output_length / 2 + 1
+impl<T: FftNum + Default, U: ?Sized + ComplexToReal<T>> StaticScratchComplexToReal<T> for U {
+    unsafe fn process_with_static_scratch(&self, input: &mut [Complex<T>], output: &mut [T]) {
+        debug_assert_eq!(input.len(), output.len() / 2 + 1);
+        let map_pointer = generic_singleton::get_or_init(|| {
+            UnsafeCell::new(HashMap::<usize, Box<[Complex<T>]>>::new())
+        })
+        .get();
+        // SAFETY:
+        // Issue:
+        // * The pointer must be properly aligned.
+        // * It must be "dereferenceable" in the sense defined in [the module documentation].
+        // * The pointer must point to an initialized instance of `T`.
+        // Proof:
+        // These invariants are all guaranteed by the generic_singleton crate.
+        //
+        // Issue:
+        // * You must enforce Rust's aliasing rules, since the returned lifetime `'a` is
+        //   arbitrarily chosen and does not necessarily reflect the actual lifetime of the data.
+        //   In particular, while this reference exists, the memory the pointer points to must
+        //   not get accessed (read or written) through any other pointer.
+        //
+        // Proof:
+        // The pointer points towards thread-local storage and is only converted to a reference in
+        // this function, without leaking references. Therefore the exclusive reference invariant
+        // should hold.
+        let map = unsafe { map_pointer.as_mut().unwrap_unchecked() };
+        let len = self.get_scratch_len();
+        let scratch = map
+            .entry(len)
+            .or_insert_with(|| vec![Complex::default(); len].into_boxed_slice());
+
+        self.process_with_scratch(input, output, scratch)
+            .unwrap_unchecked();
+    }
+}
+
+trait StaticScratchRealToComplex<T: FftNum>: RealToComplex<T> {
+    unsafe fn process_with_static_scratch(&self, input: &mut [T], output: &mut [Complex<T>]);
+}
+
+// The caller needs to ensure the following holds: input_length / 2 + 1 == output_length
+impl<T: FftNum + Default, U: ?Sized + RealToComplex<T>> StaticScratchRealToComplex<T> for U {
+    unsafe fn process_with_static_scratch(&self, input: &mut [T], output: &mut [Complex<T>]) {
+        debug_assert_eq!(input.len() / 2 + 1, output.len());
+        let map_pointer = generic_singleton::get_or_init(|| {
+            UnsafeCell::new(HashMap::<usize, Box<[Complex<T>]>>::new())
+        })
+        .get();
+        // SAFETY:
+        // Issue:
+        // * The pointer must be properly aligned.
+        // * It must be "dereferenceable" in the sense defined in [the module documentation].
+        // * The pointer must point to an initialized instance of `T`.
+        // Proof:
+        // These invariants are all guaranteed by the generic_singleton crate.
+        //
+        // Issue:
+        // * You must enforce Rust's aliasing rules, since the returned lifetime `'a` is
+        //   arbitrarily chosen and does not necessarily reflect the actual lifetime of the data.
+        //   In particular, while this reference exists, the memory the pointer points to must
+        //   not get accessed (read or written) through any other pointer.
+        //
+        // Proof:
+        // The pointer points towards thread-local storage and is only converted to a reference in
+        // this function, without leaking references. Therefore the exclusive reference invariant
+        // should hold.
+        let map = unsafe { map_pointer.as_mut().unwrap_unchecked() };
+        let len = self.get_scratch_len();
+        let scratch = map
+            .entry(len)
+            .or_insert_with(|| vec![Complex::default(); len].into_boxed_slice());
+
+        // SAFETY:
+        // TODO
+        self.process_with_scratch(input, output, scratch)
+            .unwrap_unchecked();
+    }
 }
 
 /// The result of calling [`DynRealFft::real_fft`].
@@ -194,12 +282,11 @@ impl<T: FftNum + Default> DynRealFft<T> for [T] {
         // not consistent. Since all these are calculated inside this function and have been double
         // checked and tested, we can be sure they won't be inconsistent.
         unsafe {
-            r2c.process(&mut self.to_vec(), &mut output)
-                .unwrap_unchecked();
-        }
-        DynRealDft {
-            inner: output.into_boxed_slice(),
-            original_length: self.len(),
+            r2c.process_with_static_scratch(&mut self.to_vec(), &mut output);
+            DynRealDft {
+                inner: output.into_boxed_slice(),
+                original_length: self.len(),
+            }
         }
     }
 }
@@ -217,11 +304,10 @@ impl<T: FftNum + Default> DynRealIfft<T> for DynRealDft<T> {
         // not consistent. Since all these are calculated inside this function and have been double
         // checked and tested, we can be sure they won't be inconsistent.
         unsafe {
-            c2r.process(
+            c2r.process_with_static_scratch(
                 &mut Into::<Box<[Complex<T>]>>::into(self.clone()),
                 &mut output,
-            )
-            .unwrap_unchecked();
+            );
         }
         output.into_boxed_slice()
     }
