@@ -69,6 +69,13 @@ complex_array.ifft_mut();
   This means IT'S NOT APPROPRIATE FOR APPLICATIONS THAT SPIN UP A NEW THREAD
   FOR EACH FFT OPERATION. It will work, it'll just reduce performance.
 
+### ⚠️ SCALING ⚠️
+Like [rustfft] and [realfft], `easyfft` does NOT rescale output! This is
+intentional and done for performance reasons. Many applications do an `fft`,
+manipulate the data, and do an `ifft` before actually analysing the data. The
+two normalisation steps (`1/len().sqrt()`) can be combined into a single step
+`1/len()`, halving the number of expensive division instructions.
+
 ### The `fallible` feature
 The `DynRealDft` struct has some associated operations which can panic. This is
 because the rust language does not have the ability to encode properties of the
