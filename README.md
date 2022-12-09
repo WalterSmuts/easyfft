@@ -2,6 +2,17 @@
 A Rust library crate providing an [FFT] API for arrays and slices. This crate wraps the
 [rustfft] and [realfft] crates that does the heavy lifting behind the scenes.
 
+### What does easyfft actually do?
+* Manages the [FftPlanner] and scratch buffers for you in thread local storage.
+* Exposes extension traits on arrays and slices for terse and ergonomic
+  expression of the underlying logic.
+* Implemnetation on arrays has the signal sizes verified at compile time using
+  the type checker.
+* Size calculations for real-valued signals are done for you so you can't mess
+  it up.
+* Wrapper scructs ([RealDft] and [DynRealDft]), that forces you to call the
+  correct version of `real_ifft`.
+
 ### Example
 The `nightly` dependent features are commented out.
 ```rust
@@ -54,6 +65,9 @@ complex_array.ifft_mut();
   the [generic_const_exprs] feature
 * There are no methods for in-place mutation for complex -> real or real ->
   complex transforms.
+* easyfft stores the [FftPlanner] and scratch buffer in thread local storage.
+  This means IT'S NOT APPROPRIATE FOR APPLICATIONS THAT SPIN UP A NEW THREAD
+  FOR EACH FFT OPERATION. It will work, it'll just reduce performance.
 
 ### The `fallible` feature
 The `DynRealDft` struct has some associated operations which can panic. This is
@@ -67,6 +81,18 @@ Many applications can get away with knowing the size of their signal at compile
 time. You can opt out of these panic-able operations by removing the `fallible`
 feature flag, which is enabled by default.
 
+### Why a prelude-glob import?
+I generally don't like glob imports because it makes code harder to reason
+about. Explicit imports means you can easily search for the items and see which
+packages they come from. I believe there is an exception: Traits. Traits don't
+allow you to do textual matching to figure out which trait is being used and
+which package it comes from. Since it's already a bit implicit and convoluted,
+you may aswell get the benefit of importing all of them in a single short line:
+```rust
+use easyfft::prelude::*;
+```
+For this reason, easyfft only exposes Traits via the prelude module.
+
 [FFT]: https://en.wikipedia.org/wiki/Fast_Fourier_transform
 [rustfft]: https://docs.rs/rustfft/latest/rustfft/
 [realfft]: https://docs.rs/realfft/latest/realfft/
@@ -76,3 +102,6 @@ feature flag, which is enabled by default.
 [Error]: https://doc.rust-lang.org/std/result/enum.Result.html#variant.Err
 [realfft module]: https://docs.rs/easyfft/latest/easyfft/realfft/index.html
 [dependent types]: https://en.wikipedia.org/wiki/Dependent_type
+[FftPlanner]: https://docs.rs/rustfft/latest/rustfft/struct.FftPlanner.html
+[RealDft]: https://docs.rs/easyfft/latest/easyfft/const_size/realfft/struct.RealDft.html
+[DynRealDft]: https://docs.rs/easyfft/latest/easyfft/dyn_size/realfft/struct.DynRealDft.html
