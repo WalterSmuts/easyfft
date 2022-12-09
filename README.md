@@ -21,7 +21,7 @@ The `nightly` dependent features are commented out.
 // #![feature(generic_const_exprs)]
 
 use easyfft::prelude::*;
-use easyfft::Complex;
+use easyfft::num_complex::Complex;
 
 // Complex arrays
 let complex_array = [Complex::new(1.0, 0.0); 100];

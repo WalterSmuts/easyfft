@@ -23,7 +23,7 @@ use rustfft::FftPlanner;
 use std::cell::RefCell;
 use std::sync::Arc;
 
-pub use rustfft::num_complex::Complex;
+pub use rustfft::num_complex;
 pub use rustfft::FftNum;
 
 pub mod const_size;

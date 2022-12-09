@@ -180,7 +180,7 @@ impl<T: Default + Copy> DynRealDft<T> {
     /// ```
     /// use easyfft::dyn_size::realfft::DynRealDft;
     /// use easyfft::dyn_size::realfft::DynRealIfft;
-    /// use easyfft::Complex;
+    /// use easyfft::num_complex::Complex;
     ///
     /// // Initialize a DynRealDft struct that would produce an signal of length 4 after calling real_ifft().
     /// let real_dft_4 = DynRealDft::new(10.0, &[Complex::new(1.0, 2.0), Complex::default()], 4);

@@ -106,7 +106,7 @@ where
     /// #![feature(generic_const_exprs)]
     /// use easyfft::const_size::realfft::RealDft;
     /// use easyfft::const_size::realfft::RealIfft;
-    /// use easyfft::Complex;
+    /// use easyfft::num_complex::Complex;
     ///
     /// // Initialize a RealDft struct that would produce an signal of length 4 when calling real_ifft().
     /// let real_dft_4 = RealDft::<_, 4>::new(10.0, [Complex::new(1.0, 2.0), Complex::default()]);

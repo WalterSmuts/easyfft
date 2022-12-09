@@ -3,7 +3,7 @@
 //! ### Example:
 //! ```rust
 //! use approx::assert_ulps_eq;
-//! use easyfft::Complex;
+//! use easyfft::num_complex::Complex;
 //! use easyfft::dyn_size::DynFft;
 //! use easyfft::dyn_size::DynIfft;
 //!
