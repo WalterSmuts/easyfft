@@ -67,12 +67,6 @@ Many applications can get away with knowing the size of their signal at compile
 time. You can opt out of these panic-able operations by removing the `fallible`
 feature flag, which is enabled by default.
 
-#### Footnotes
-[^panic]: While this could be true in theory, in practice it most probably is not.
-There could be bugs in this crate or it's dependencies that may cause a panic,
-but in theory all the runtime panics have been moved to compile time errors.
-
-
 [FFT]: https://en.wikipedia.org/wiki/Fast_Fourier_transform
 [rustfft]: https://docs.rs/rustfft/latest/rustfft/
 [realfft]: https://docs.rs/realfft/latest/realfft/
