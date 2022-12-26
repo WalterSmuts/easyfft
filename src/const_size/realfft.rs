@@ -38,6 +38,8 @@ use realfft::num_traits::NumAssign;
 use rustfft::num_complex::Complex;
 use rustfft::FftNum;
 use std::cell::UnsafeCell;
+use std::ops::Add;
+use std::ops::AddAssign;
 use std::ops::Deref;
 use std::ops::Mul;
 use std::ops::MulAssign;
@@ -293,6 +295,87 @@ where
                 .unwrap_unchecked();
         }
         output
+    }
+}
+
+impl<T: Default + FftNum, const SIZE: usize> Add for &RealDft<T, SIZE>
+where
+    [T; SIZE / 2 + 1]: Sized,
+{
+    type Output = RealDft<T, SIZE>;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        let mut inner = self.inner;
+        for (i, r) in inner.iter_mut().zip(rhs.iter()) {
+            *i = *i + r;
+        }
+        RealDft { inner }
+    }
+}
+
+impl<T: Default + FftNum, const SIZE: usize> AddAssign for RealDft<T, SIZE>
+where
+    [T; SIZE / 2 + 1]: Sized,
+{
+    fn add_assign(&mut self, rhs: Self) {
+        for (i, r) in self.inner.iter_mut().zip(rhs.iter()) {
+            *i = *i + r;
+        }
+    }
+}
+
+impl<T: Default + FftNum, const SIZE: usize> Mul<T> for &RealDft<T, SIZE>
+where
+    [T; SIZE / 2 + 1]: Sized,
+{
+    type Output = RealDft<T, SIZE>;
+
+    fn mul(self, rhs: T) -> Self::Output {
+        #[allow(clippy::suspicious_arithmetic_impl)]
+        let mut inner = [Complex::default(); SIZE / 2 + 1];
+        for index in 0..self.len() {
+            inner[index] = self[index] * rhs;
+        }
+        RealDft { inner }
+    }
+}
+
+impl<T: Default + FftNum + NumAssign, const SIZE: usize> MulAssign<T> for RealDft<T, SIZE>
+where
+    [T; SIZE / 2 + 1]: Sized,
+{
+    fn mul_assign(&mut self, rhs: T) {
+        for bin_self in self.inner.iter_mut() {
+            *bin_self *= rhs;
+        }
+    }
+}
+
+impl<T: Default + FftNum, const SIZE: usize> Mul<&[T]> for &RealDft<T, SIZE>
+where
+    [T; SIZE / 2 + 1]: Sized,
+{
+    type Output = RealDft<T, SIZE>;
+
+    fn mul(self, rhs: &[T]) -> Self::Output {
+        assert_eq!(self.len(), rhs.len());
+        let mut inner = [Complex::default(); SIZE / 2 + 1];
+        for index in 0..self.len() {
+            inner[index] = self[index] * rhs[index];
+        }
+        RealDft { inner }
+    }
+}
+
+impl<T: Default + FftNum + NumAssign, const SIZE: usize> MulAssign<&[T]> for RealDft<T, SIZE>
+where
+    [T; SIZE / 2 + 1]: Sized,
+{
+    fn mul_assign(&mut self, rhs: &[T]) {
+        assert_eq!(self.len(), rhs.len());
+        for (bin_self, bin_rhs) in self.inner.iter_mut().zip(rhs.iter()) {
+            *bin_self *= bin_rhs;
+        }
     }
 }
 
