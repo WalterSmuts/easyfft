@@ -30,6 +30,8 @@ use rustfft::num_complex::Complex;
 use rustfft::FftNum;
 use std::cell::UnsafeCell;
 use std::collections::HashMap;
+use std::ops::Add;
+use std::ops::AddAssign;
 use std::ops::Deref;
 #[cfg(feature = "fallible")]
 use std::ops::Mul;
@@ -208,6 +210,33 @@ impl<T> Deref for DynRealDft<T> {
 }
 
 #[cfg(feature = "fallible")]
+impl<T: Default + FftNum> Add for &DynRealDft<T> {
+    type Output = DynRealDft<T>;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        assert_eq!(self.len(), rhs.len());
+        let mut inner = self.inner.clone();
+        for (i, r) in inner.iter_mut().zip(rhs.iter()) {
+            *i = *i + r;
+        }
+        DynRealDft {
+            original_length: self.original_length,
+            inner,
+        }
+    }
+}
+
+#[cfg(feature = "fallible")]
+impl<T: Default + FftNum> AddAssign for DynRealDft<T> {
+    fn add_assign(&mut self, rhs: Self) {
+        assert_eq!(self.len(), rhs.len());
+        for (i, r) in self.inner.iter_mut().zip(rhs.iter()) {
+            *i = *i + r;
+        }
+    }
+}
+
+#[cfg(feature = "fallible")]
 impl<T: Default + FftNum> Mul for &DynRealDft<T> {
     type Output = DynRealDft<T>;
 
@@ -227,6 +256,56 @@ impl<T: Default + FftNum> Mul for &DynRealDft<T> {
 #[cfg(feature = "fallible")]
 impl<T: Default + FftNum + NumAssign> MulAssign<&Self> for DynRealDft<T> {
     fn mul_assign(&mut self, rhs: &Self) {
+        assert_eq!(self.len(), rhs.len());
+        for (bin_self, bin_rhs) in self.inner.iter_mut().zip(rhs.iter()) {
+            *bin_self *= bin_rhs;
+        }
+    }
+}
+
+impl<T: Default + FftNum> Mul<T> for &DynRealDft<T> {
+    type Output = DynRealDft<T>;
+
+    fn mul(self, rhs: T) -> Self::Output {
+        let mut inner = Vec::with_capacity(self.len());
+        for index in 0..self.len() {
+            inner.push(self[index] * rhs);
+        }
+        DynRealDft {
+            inner: inner.into_boxed_slice(),
+            original_length: self.original_length,
+        }
+    }
+}
+
+impl<T: Default + FftNum + NumAssign> MulAssign<T> for DynRealDft<T> {
+    fn mul_assign(&mut self, rhs: T) {
+        for bin_self in self.inner.iter_mut() {
+            *bin_self *= rhs;
+        }
+    }
+}
+
+#[cfg(feature = "fallible")]
+impl<T: Default + FftNum> Mul<&[T]> for &DynRealDft<T> {
+    type Output = DynRealDft<T>;
+
+    fn mul(self, rhs: &[T]) -> Self::Output {
+        assert_eq!(self.len(), rhs.len());
+        let mut inner = Vec::with_capacity(self.len());
+        for index in 0..self.len() {
+            inner.push(self[index] * rhs[index]);
+        }
+        DynRealDft {
+            inner: inner.into_boxed_slice(),
+            original_length: self.original_length,
+        }
+    }
+}
+
+#[cfg(feature = "fallible")]
+impl<T: Default + FftNum + NumAssign> MulAssign<&[T]> for DynRealDft<T> {
+    fn mul_assign(&mut self, rhs: &[T]) {
         assert_eq!(self.len(), rhs.len());
         for (bin_self, bin_rhs) in self.inner.iter_mut().zip(rhs.iter()) {
             *bin_self *= bin_rhs;
