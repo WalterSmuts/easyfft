@@ -43,6 +43,15 @@ use crate::get_real_fft_algorithm;
 pub trait DynRealFft<T> {
     /// Perform a real-valued FFT on a signal with input size `SIZE` and output size `SIZE / 2 + 1`.
     fn real_fft(&self) -> DynRealDft<T>;
+
+    #[cfg(feature = "fallible")]
+    /// Perform a real-valued FFT on a signal with input size `SIZE` and output size `SIZE / 2 + 1`
+    /// using a struct that's already allocated. This is to avoid an allocation when you've already
+    /// got a buffer.
+    ///
+    /// # Panics
+    /// Panics if the output's original length is not equal to the input buffer.
+    fn real_fft_using(&self, output: &mut DynRealDft<T>);
 }
 
 /// A trait for performing fast IDFT's on structs representing real signals with a size not known
@@ -50,10 +59,23 @@ pub trait DynRealFft<T> {
 pub trait DynRealIfft<T> {
     /// Perform a real-valued IFFT on a signal which originally had input size `SIZE`.
     fn real_ifft(&self) -> Box<[T]>;
+
+    #[cfg(feature = "fallible")]
+    /// Perform a real-valued IFFT on a signal which originally had input size `SIZE` using a
+    /// buffer that's already allocated. This is to avoid an allocation when you've already got a
+    /// buffer.
+    ///
+    /// # Panics
+    /// Panics if the `original_length` is not equal to `output.len()`.
+    fn real_ifft_using(&self, output: &mut [T]);
 }
 
 trait StaticScratchComplexToReal<T: FftNum>: ComplexToReal<T> {
     unsafe fn process_with_static_scratch(&self, input: &mut [Complex<T>], output: &mut [T]);
+}
+
+trait PrivateRealFftUsing<T> {
+    fn real_fft_using(&self, output: &mut DynRealDft<T>);
 }
 
 // The caller needs to ensure the following holds: input_length == output_length / 2 + 1
@@ -348,33 +370,46 @@ impl<T> From<DynRealDft<T>> for Box<[Complex<T>]> {
 
 impl<T: FftNum + Default> DynRealFft<T> for [T] {
     fn real_fft(&self) -> DynRealDft<T> {
-        let r2c = get_real_fft_algorithm::<T>(self.len());
-
         // TODO: Remove default dependency and unnesasary initialization
-        let mut output = vec![Complex::default(); self.len() / 2 + 1];
+        let output = vec![Complex::default(); self.len() / 2 + 1];
+        let mut output = DynRealDft {
+            inner: output.into_boxed_slice(),
+            original_length: self.len(),
+        };
+        self.real_fft_using(&mut output);
+        output
+    }
+
+    #[cfg(feature = "fallible")]
+    fn real_fft_using(&self, output: &mut DynRealDft<T>) {
+        assert_eq!(self.len(), output.original_length);
+        let r2c = get_real_fft_algorithm::<T>(self.len());
 
         // SAFETY:
         // The error case only happens when the size of the input and output and fft algorithm are
         // not consistent. Since all these are calculated inside this function and have been double
         // checked and tested, we can be sure they won't be inconsistent.
         unsafe {
-            r2c.process_with_static_scratch(&mut self.to_vec(), &mut output);
-            DynRealDft {
-                inner: output.into_boxed_slice(),
-                original_length: self.len(),
-            }
+            r2c.process_with_static_scratch(&mut self.to_vec(), &mut output.inner);
         }
     }
 }
 
 impl<T: FftNum + Default> DynRealIfft<T> for DynRealDft<T> {
     fn real_ifft(&self) -> Box<[T]> {
-        let c2r = get_inverse_real_fft_algorithm::<T>(self.original_length);
-
         let mut output = Vec::with_capacity(self.original_length);
         for _ in 0..self.original_length {
             output.push(T::default());
         }
+        self.real_ifft_using(&mut output);
+        output.into_boxed_slice()
+    }
+
+    #[cfg(feature = "fallible")]
+    fn real_ifft_using(&self, output: &mut [T]) {
+        assert_eq!(self.original_length, output.len());
+        let c2r = get_inverse_real_fft_algorithm::<T>(self.original_length);
+
         // SAFETY:
         // The error case only happens when the size of the input and output and fft algorithm are
         // not consistent. Since all these are calculated inside this function and have been double
@@ -382,10 +417,43 @@ impl<T: FftNum + Default> DynRealIfft<T> for DynRealDft<T> {
         unsafe {
             c2r.process_with_static_scratch(
                 &mut Into::<Box<[Complex<T>]>>::into(self.clone()),
-                &mut output,
+                output,
             );
         }
-        output.into_boxed_slice()
+    }
+}
+
+// TODO: Investigate ways to de-duplicate this logic
+#[cfg(not(feature = "fallible"))]
+impl<T: FftNum + Default> PrivateRealFftUsing<T> for [T] {
+    fn real_fft_using(&self, output: &mut DynRealDft<T>) {
+        debug_assert_eq!(self.len(), output.original_length);
+        let r2c = get_real_fft_algorithm::<T>(self.len());
+
+        // SAFETY:
+        // The error case only happens when the size of the input and output and fft algorithm are
+        // not consistent. Since all these are calculated inside this function and have been double
+        // checked and tested, we can be sure they won't be inconsistent.
+        unsafe {
+            r2c.process_with_static_scratch(self, &mut output.inner);
+        }
+    }
+}
+
+// TODO: Investigate ways to de-duplicate this logic
+#[cfg(not(feature = "fallible"))]
+impl<T: FftNum + Default> DynRealDft<T> {
+    fn real_ifft_using(&self, output: &mut [T]) {
+        debug_assert_eq!(self.original_length, output.len());
+        let c2r = get_inverse_real_fft_algorithm::<T>(self.original_length);
+
+        // SAFETY:
+        // The error case only happens when the size of the input and output and fft algorithm are
+        // not consistent. Since all these are calculated inside this function and have been double
+        // checked and tested, we can be sure they won't be inconsistent.
+        unsafe {
+            c2r.process_with_static_scratch(self, output);
+        }
     }
 }
 
