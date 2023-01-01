@@ -22,7 +22,6 @@
 //!     assert_ulps_eq!(*manipulated, original * 10.0);
 //! }
 //! ```
-#[cfg(feature = "fallible")]
 use realfft::num_traits::NumAssign;
 use realfft::ComplexToReal;
 use realfft::RealToComplex;
@@ -33,9 +32,7 @@ use std::collections::HashMap;
 use std::ops::Add;
 use std::ops::AddAssign;
 use std::ops::Deref;
-#[cfg(feature = "fallible")]
 use std::ops::Mul;
-#[cfg(feature = "fallible")]
 use std::ops::MulAssign;
 
 use crate::get_inverse_real_fft_algorithm;
