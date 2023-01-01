@@ -43,11 +43,11 @@ use crate::get_real_fft_algorithm;
 /// A trait for performing fast DFT's on structs representing real signals with a size not known at
 /// compile time.
 pub trait DynRealFft<T> {
-    /// Perform a real-valued FFT on a signal with input size `SIZE` and output size `SIZE / 2 + 1`.
+    /// Perform a real-valued FFT on a signal with input size `self.len()` and output size `self.len() / 2 + 1`.
     fn real_fft(&self) -> DynRealDft<T>;
 
     #[cfg(feature = "fallible")]
-    /// Perform a real-valued FFT on a signal with input size `SIZE` and output size `SIZE / 2 + 1`
+    /// Perform a real-valued FFT on a signal with input size `self.len()` and output size `self.len() / 2 + 1`
     /// using a struct that's already allocated. This is to avoid an allocation when you've already
     /// got a buffer.
     ///
@@ -59,11 +59,11 @@ pub trait DynRealFft<T> {
 /// A trait for performing fast IDFT's on structs representing real signals with a size not known
 /// at compile time.
 pub trait DynRealIfft<T> {
-    /// Perform a real-valued IFFT on a signal which originally had input size `SIZE`.
+    /// Perform a real-valued IFFT on a signal which originally had input size `self.len()`.
     fn real_ifft(&self) -> Box<[T]>;
 
     #[cfg(feature = "fallible")]
-    /// Perform a real-valued IFFT on a signal which originally had input size `SIZE` using a
+    /// Perform a real-valued IFFT on a signal which originally had input size `self.len()` using a
     /// buffer that's already allocated. This is to avoid an allocation when you've already got a
     /// buffer.
     ///
