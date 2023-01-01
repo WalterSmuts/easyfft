@@ -420,10 +420,7 @@ impl<T: FftNum + Default> DynRealFft<T> for [T] {
 
 impl<T: FftNum + Default> DynRealIfft<T> for DynRealDft<T> {
     fn real_ifft(&self) -> Box<[T]> {
-        let mut output = Vec::with_capacity(self.original_length);
-        for _ in 0..self.original_length {
-            output.push(T::default());
-        }
+        let mut output = vec![T::default(); self.original_length];
         self.real_ifft_using(&mut output);
         output.into_boxed_slice()
     }
