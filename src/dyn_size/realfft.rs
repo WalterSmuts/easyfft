@@ -29,7 +29,9 @@ use rustfft::num_complex::Complex;
 use rustfft::FftNum;
 use std::cell::UnsafeCell;
 use std::collections::HashMap;
+#[cfg(feature = "fallible")]
 use std::ops::Add;
+#[cfg(feature = "fallible")]
 use std::ops::AddAssign;
 use std::ops::Deref;
 use std::ops::Mul;
