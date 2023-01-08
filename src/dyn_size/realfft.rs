@@ -27,7 +27,6 @@ use realfft::ComplexToReal;
 use realfft::RealToComplex;
 use rustfft::num_complex::Complex;
 use rustfft::FftNum;
-use std::cell::UnsafeCell;
 use std::collections::HashMap;
 #[cfg(feature = "fallible")]
 use std::ops::Add;
@@ -37,8 +36,8 @@ use std::ops::Deref;
 use std::ops::Mul;
 use std::ops::MulAssign;
 
-use crate::get_inverse_real_fft_algorithm;
-use crate::get_real_fft_algorithm;
+use crate::with_inverse_real_fft_algorithm;
+use crate::with_real_fft_algorithm;
 
 /// A trait for performing fast DFT's on structs representing real signals with a size not known at
 /// compile time.
@@ -84,49 +83,31 @@ trait PrivateRealFftUsing<T> {
 impl<T: FftNum + Default, U: ?Sized + ComplexToReal<T>> StaticScratchComplexToReal<T> for U {
     unsafe fn process_with_static_scratch(&self, input: &[Complex<T>], output: &mut [T]) {
         debug_assert_eq!(input.len(), output.len() / 2 + 1);
-        let input_clone_map_pointer = generic_singleton::get_or_init(|| {
-            UnsafeCell::new(HashMap::<usize, Box<[Complex<T>]>>::new())
-        })
-        .get();
-        let scratch_buffer_map_pointer = generic_singleton::get_or_init(|| {
-            UnsafeCell::new(HashMap::<usize, Box<[Complex<T>]>>::new())
-        })
-        .get();
-        // SAFETY:
-        //
-        // Issue:
-        // * The pointer must be properly aligned.
-        // * It must be "dereferenceable" in the sense defined in [the module documentation].
-        // * The pointer must point to an initialized instance of `T`.
-        // Proof:
-        // These invariants are all guaranteed by the generic_singleton crate.
-        //
-        // Issue:
-        // * You must enforce Rust's aliasing rules, since the returned lifetime `'a` is
-        //   arbitrarily chosen and does not necessarily reflect the actual lifetime of the data.
-        //   In particular, while this reference exists, the memory the pointer points to must
-        //   not get accessed (read or written) through any other pointer.
-        //
-        // Proof:
-        // The pointer points towards thread-local storage and is only converted to a reference in
-        // this function, without leaking references. Therefore the exclusive reference invariant
-        // should hold.
-        let scratch_buffer_map = unsafe { scratch_buffer_map_pointer.as_mut().unwrap_unchecked() };
-        // SAFETY: Same as above
-        let input_clone_map = unsafe { input_clone_map_pointer.as_mut().unwrap_unchecked() };
+        generic_singleton::get_or_init_thread_local!(
+            HashMap::<usize, Box<[Complex<T>]>>::new,
+            |input_clone_map| {
+                generic_singleton::get_or_init_thread_local!(
+                    || { HashMap::<usize, Box<[Complex<T>]>>::new() },
+                    |scratch_buffer_map| {
+                        let scratch_buffer_len = self.get_scratch_len();
 
-        let scratch_buffer_len = self.get_scratch_len();
+                        let scratch =
+                            scratch_buffer_map
+                                .entry(scratch_buffer_len)
+                                .or_insert_with(|| {
+                                    vec![Complex::default(); scratch_buffer_len].into_boxed_slice()
+                                });
+                        let input_clone = input_clone_map.entry(input.len()).or_insert_with(|| {
+                            vec![Complex::default(); input.len()].into_boxed_slice()
+                        });
 
-        let scratch = scratch_buffer_map
-            .entry(scratch_buffer_len)
-            .or_insert_with(|| vec![Complex::default(); scratch_buffer_len].into_boxed_slice());
-        let input_clone = input_clone_map
-            .entry(input.len())
-            .or_insert_with(|| vec![Complex::default(); input.len()].into_boxed_slice());
-
-        input_clone.copy_from_slice(input);
-        self.process_with_scratch(input_clone, output, scratch)
-            .unwrap_unchecked();
+                        input_clone.copy_from_slice(input);
+                        self.process_with_scratch(input_clone, output, scratch)
+                            .unwrap_unchecked();
+                    }
+                );
+            }
+        );
     }
 }
 
@@ -138,48 +119,32 @@ trait StaticScratchRealToComplex<T: FftNum>: RealToComplex<T> {
 impl<T: FftNum + Default, U: ?Sized + RealToComplex<T>> StaticScratchRealToComplex<T> for U {
     unsafe fn process_with_static_scratch(&self, input: &[T], output: &mut [Complex<T>]) {
         debug_assert_eq!(input.len() / 2 + 1, output.len());
-        let input_clone_map_pointer =
-            generic_singleton::get_or_init(|| UnsafeCell::new(HashMap::<usize, Box<[T]>>::new()))
-                .get();
-        let scratch_buffer_map_pointer = generic_singleton::get_or_init(|| {
-            UnsafeCell::new(HashMap::<usize, Box<[Complex<T>]>>::new())
-        })
-        .get();
-        // SAFETY:
-        //
-        // Issue:
-        // * The pointer must be properly aligned.
-        // * It must be "dereferenceable" in the sense defined in [the module documentation].
-        // * The pointer must point to an initialized instance of `T`.
-        // Proof:
-        // These invariants are all guaranteed by the generic_singleton crate.
-        //
-        // Issue:
-        // * You must enforce Rust's aliasing rules, since the returned lifetime `'a` is
-        //   arbitrarily chosen and does not necessarily reflect the actual lifetime of the data.
-        //   In particular, while this reference exists, the memory the pointer points to must
-        //   not get accessed (read or written) through any other pointer.
-        //
-        // Proof:
-        // The pointer points towards thread-local storage and is only converted to a reference in
-        // this function, without leaking references. Therefore the exclusive reference invariant
-        // should hold.
-        let scratch_buffer_map = unsafe { scratch_buffer_map_pointer.as_mut().unwrap_unchecked() };
-        // SAFETY: Same as above
-        let input_clone_map = unsafe { input_clone_map_pointer.as_mut().unwrap_unchecked() };
 
-        let scratch_buffer_len = self.get_scratch_len();
+        generic_singleton::get_or_init_thread_local!(
+            HashMap::<usize, Box<[T]>>::new,
+            |input_clone_map| {
+                generic_singleton::get_or_init_thread_local!(
+                    HashMap::<usize, Box<[Complex<T>]>>::new,
+                    |scratch_buffer_map| {
+                        let scratch_buffer_len = self.get_scratch_len();
 
-        let scratch = scratch_buffer_map
-            .entry(scratch_buffer_len)
-            .or_insert_with(|| vec![Complex::default(); scratch_buffer_len].into_boxed_slice());
-        let input_clone = input_clone_map
-            .entry(input.len())
-            .or_insert_with(|| vec![T::default(); input.len()].into_boxed_slice());
+                        let scratch =
+                            scratch_buffer_map
+                                .entry(scratch_buffer_len)
+                                .or_insert_with(|| {
+                                    vec![Complex::default(); scratch_buffer_len].into_boxed_slice()
+                                });
+                        let input_clone = input_clone_map
+                            .entry(input.len())
+                            .or_insert_with(|| vec![T::default(); input.len()].into_boxed_slice());
 
-        input_clone.copy_from_slice(input);
-        self.process_with_scratch(input_clone, output, scratch)
-            .unwrap_unchecked();
+                        input_clone.copy_from_slice(input);
+                        self.process_with_scratch(input_clone, output, scratch)
+                            .unwrap_unchecked();
+                    }
+                );
+            }
+        );
     }
 }
 
@@ -449,15 +414,15 @@ impl<T: FftNum + Default> DynRealFft<T> for [T] {
     #[cfg(feature = "fallible")]
     fn real_fft_using(&self, output: &mut DynRealDft<T>) {
         assert_eq!(self.len(), output.original_length);
-        let r2c = get_real_fft_algorithm::<T>(self.len());
-
-        // SAFETY:
-        // The error case only happens when the size of the input and output and fft algorithm are
-        // not consistent. Since all these are calculated inside this function and have been double
-        // checked and tested, we can be sure they won't be inconsistent.
-        unsafe {
-            r2c.process_with_static_scratch(self, &mut output.inner);
-        }
+        with_real_fft_algorithm::<T>(self.len(), |r2c| {
+            // SAFETY:
+            // The error case only happens when the size of the input and output and fft algorithm are
+            // not consistent. Since all these are calculated inside this function and have been double
+            // checked and tested, we can be sure they won't be inconsistent.
+            unsafe {
+                r2c.process_with_static_scratch(self, &mut output.inner);
+            }
+        });
     }
 }
 
@@ -471,15 +436,15 @@ impl<T: FftNum + Default> DynRealIfft<T> for DynRealDft<T> {
     #[cfg(feature = "fallible")]
     fn real_ifft_using(&self, output: &mut [T]) {
         assert_eq!(self.original_length, output.len());
-        let c2r = get_inverse_real_fft_algorithm::<T>(self.original_length);
-
-        // SAFETY:
-        // The error case only happens when the size of the input and output and fft algorithm are
-        // not consistent. Since all these are calculated inside this function and have been double
-        // checked and tested, we can be sure they won't be inconsistent.
-        unsafe {
-            c2r.process_with_static_scratch(self, output);
-        }
+        with_inverse_real_fft_algorithm::<T>(self.original_length, |c2r| {
+            // SAFETY:
+            // The error case only happens when the size of the input and output and fft algorithm are
+            // not consistent. Since all these are calculated inside this function and have been double
+            // checked and tested, we can be sure they won't be inconsistent.
+            unsafe {
+                c2r.process_with_static_scratch(self, output);
+            }
+        });
     }
 }
 
@@ -488,7 +453,7 @@ impl<T: FftNum + Default> DynRealIfft<T> for DynRealDft<T> {
 impl<T: FftNum + Default> PrivateRealFftUsing<T> for [T] {
     fn real_fft_using(&self, output: &mut DynRealDft<T>) {
         debug_assert_eq!(self.len(), output.original_length);
-        let r2c = get_real_fft_algorithm::<T>(self.len());
+        let r2c = with_real_fft_algorithm::<T>(self.len());
 
         // SAFETY:
         // The error case only happens when the size of the input and output and fft algorithm are
@@ -505,7 +470,7 @@ impl<T: FftNum + Default> PrivateRealFftUsing<T> for [T] {
 impl<T: FftNum + Default> DynRealDft<T> {
     fn real_ifft_using(&self, output: &mut [T]) {
         debug_assert_eq!(self.original_length, output.len());
-        let c2r = get_inverse_real_fft_algorithm::<T>(self.original_length);
+        let c2r = with_inverse_real_fft_algorithm::<T>(self.original_length);
 
         // SAFETY:
         // The error case only happens when the size of the input and output and fft algorithm are

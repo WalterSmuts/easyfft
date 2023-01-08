@@ -20,7 +20,6 @@ use ::realfft::RealFftPlanner;
 #[rustfmt::skip]
 use ::realfft::RealToComplex;
 use rustfft::FftPlanner;
-use std::cell::RefCell;
 use std::sync::Arc;
 
 pub use rustfft::num_complex;
@@ -58,36 +57,31 @@ pub mod prelude {
     pub use crate::dyn_size::DynIfftMut;
 }
 
-pub(crate) struct PrivateWrapper<T>(T);
-
-// TODO: Consider using UnsafeCell to avoid runtime borrow-checking.
-fn get_fft_algorithm<T: FftNum>(size: usize) -> Arc<dyn rustfft::Fft<T>> {
-    generic_singleton::get_or_init(|| RefCell::new(PrivateWrapper(FftPlanner::new())))
-        .borrow_mut()
-        .0
-        .plan_fft_forward(size)
+fn with_fft_algorithm<T: FftNum>(size: usize, mut with: impl FnMut(Arc<dyn rustfft::Fft<T>>)) {
+    let with = |planner: &mut FftPlanner<T>| with(planner.plan_fft_forward(size));
+    generic_singleton::get_or_init_thread_local!(|| FftPlanner::new(), with);
 }
 
-// TODO: Consider using UnsafeCell to avoid runtime borrow-checking.
-fn get_inverse_fft_algorithm<T: FftNum>(size: usize) -> Arc<dyn rustfft::Fft<T>> {
-    generic_singleton::get_or_init(|| RefCell::new(PrivateWrapper(FftPlanner::new())))
-        .borrow_mut()
-        .0
-        .plan_fft_inverse(size)
+fn with_inverse_fft_algorithm<T: FftNum>(
+    size: usize,
+    mut with: impl FnMut(Arc<dyn rustfft::Fft<T>>),
+) {
+    let with = |planner: &mut FftPlanner<T>| with(planner.plan_fft_inverse(size));
+    generic_singleton::get_or_init_thread_local!(|| FftPlanner::new(), with);
 }
 
-// TODO: Consider using UnsafeCell to avoid runtime borrow-checking.
-fn get_real_fft_algorithm<T: FftNum>(size: usize) -> Arc<dyn RealToComplex<T>> {
-    generic_singleton::get_or_init(|| RefCell::new(PrivateWrapper(RealFftPlanner::new())))
-        .borrow_mut()
-        .0
-        .plan_fft_forward(size)
+fn with_real_fft_algorithm<T: FftNum>(
+    size: usize,
+    mut with: impl FnMut(Arc<dyn RealToComplex<T>>),
+) {
+    let with = |planner: &mut RealFftPlanner<T>| with(planner.plan_fft_forward(size));
+    generic_singleton::get_or_init_thread_local!(|| RealFftPlanner::new(), with);
 }
 
-// TODO: Consider using UnsafeCell to avoid runtime borrow-checking.
-fn get_inverse_real_fft_algorithm<T: FftNum>(size: usize) -> Arc<dyn ComplexToReal<T>> {
-    generic_singleton::get_or_init(|| RefCell::new(PrivateWrapper(RealFftPlanner::new())))
-        .borrow_mut()
-        .0
-        .plan_fft_inverse(size)
+fn with_inverse_real_fft_algorithm<T: FftNum>(
+    size: usize,
+    mut with: impl FnMut(Arc<dyn ComplexToReal<T>>),
+) {
+    let with = |planner: &mut RealFftPlanner<T>| with(planner.plan_fft_inverse(size));
+    generic_singleton::get_or_init_thread_local!(|| RealFftPlanner::new(), with);
 }

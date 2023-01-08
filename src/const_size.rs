@@ -23,15 +23,14 @@
 //! }
 //! ```
 use array_init::map_array_init;
-use std::cell::UnsafeCell;
 
 #[rustfmt::skip]
 use ::realfft::num_complex::Complex;
 #[rustfmt::skip]
 use ::realfft::FftNum;
 
-use crate::get_fft_algorithm;
-use crate::get_inverse_fft_algorithm;
+use crate::with_fft_algorithm;
+use crate::with_inverse_fft_algorithm;
 
 #[cfg(feature = "const-realfft")]
 pub mod realfft;
@@ -72,28 +71,12 @@ impl<T: FftNum + Default, U: ?Sized + rustfft::Fft<T>, const SIZE: usize> Static
     for U
 {
     fn process_with_static_scratch(&self, buffer: &mut [Complex<T>; SIZE]) {
-        let scratch_buffer_pointer =
-            generic_singleton::get_or_init(|| UnsafeCell::new([Complex::default(); SIZE])).get();
-        // SAFETY:
-        // Issue:
-        // * The pointer must be properly aligned.
-        // * It must be "dereferenceable" in the sense defined in [the module documentation].
-        // * The pointer must point to an initialized instance of `T`.
-        // Proof:
-        // These invariants are all guaranteed by the generic_singleton crate.
-        //
-        // Issue:
-        // * You must enforce Rust's aliasing rules, since the returned lifetime `'a` is
-        //   arbitrarily chosen and does not necessarily reflect the actual lifetime of the data.
-        //   In particular, while this reference exists, the memory the pointer points to must
-        //   not get accessed (read or written) through any other pointer.
-        //
-        // Proof:
-        // The pointer points towards thread-local storage and is only converted to a reference in
-        // this function, without leaking references. Therefore the exclusive reference invariant
-        // should hold.
-        let scratch_buffer_ref = unsafe { scratch_buffer_pointer.as_mut().unwrap_unchecked() };
-        self.process_with_scratch(buffer, scratch_buffer_ref);
+        generic_singleton::get_or_init_thread_local!(
+            || [Complex::default(); SIZE],
+            |scratch_buffer_ref| {
+                self.process_with_scratch(buffer, scratch_buffer_ref);
+            }
+        );
     }
 }
 
@@ -101,7 +84,9 @@ impl<T: FftNum + Default, const SIZE: usize> Fft<T, SIZE> for [T; SIZE] {
     fn fft(&self) -> [Complex<T>; SIZE] {
         let mut buffer = map_array_init(self, |sample| Complex::new(*sample, T::default()));
 
-        get_fft_algorithm::<T>(SIZE).process_with_static_scratch(&mut buffer);
+        with_fft_algorithm::<T>(SIZE, |algorithm| {
+            algorithm.process_with_static_scratch(&mut buffer);
+        });
         buffer
     }
 }
@@ -110,7 +95,9 @@ impl<T: FftNum + std::default::Default, const SIZE: usize> Fft<T, SIZE> for [Com
     fn fft(&self) -> [Complex<T>; SIZE] {
         // Copy into a new buffer
         let mut buffer: [Complex<T>; SIZE] = *self;
-        get_fft_algorithm::<T>(SIZE).process_with_static_scratch(&mut buffer);
+        with_fft_algorithm::<T>(SIZE, |algorithm| {
+            algorithm.process_with_static_scratch(&mut buffer);
+        });
         buffer
     }
 }
@@ -118,20 +105,22 @@ impl<T: FftNum + std::default::Default, const SIZE: usize> Fft<T, SIZE> for [Com
 impl<T: FftNum + Default, const SIZE: usize> Ifft<T, SIZE> for [Complex<T>; SIZE] {
     fn ifft(&self) -> [Complex<T>; SIZE] {
         let mut buffer = *self;
-        get_inverse_fft_algorithm::<T>(SIZE).process_with_static_scratch(&mut buffer);
+        with_inverse_fft_algorithm::<T>(SIZE, |fft| fft.process_with_static_scratch(&mut buffer));
         buffer
     }
 }
 
 impl<T: FftNum + std::default::Default, const SIZE: usize> FftMut<T, SIZE> for [Complex<T>; SIZE] {
     fn fft_mut(&mut self) {
-        get_fft_algorithm::<T>(SIZE).process_with_static_scratch(self);
+        with_fft_algorithm::<T>(SIZE, |algorithm| {
+            algorithm.process_with_static_scratch(self);
+        });
     }
 }
 
 impl<T: FftNum + Default, const SIZE: usize> IfftMut<T, SIZE> for [Complex<T>; SIZE] {
     fn ifft_mut(&mut self) {
-        get_inverse_fft_algorithm::<T>(SIZE).process_with_static_scratch(self);
+        with_inverse_fft_algorithm::<T>(SIZE, |fft| fft.process_with_static_scratch(self));
     }
 }
 
