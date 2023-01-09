@@ -410,6 +410,23 @@ impl<T: FftNum + Default> DynRealDft<T> {
         }
     }
 }
+impl<T: FftNum> DynRealDft<T> {
+    #[cfg(feature = "fallible")]
+    /// Copy from a slice of Complex values.
+    ///
+    /// # Panics
+    /// * Panics if the `original_length / 2 + 1` is not equal to `slice.len()`.
+    /// * If the first element of the slice has a non-zero imaginary component or the last element if
+    /// `original_length` is odd.
+    pub fn copy_from_slice(&mut self, slice: &[Complex<T>]) {
+        assert_eq!(self.original_length / 2 + 1, slice.len());
+        assert_eq!(slice[0].im, T::from_f32(0.0).unwrap());
+        if self.original_length % 2 == 0 {
+            assert_eq!(slice[slice.len() - 1].im, T::from_f32(0.0).unwrap());
+        }
+        self.inner.copy_from_slice(slice);
+    }
+}
 
 impl<T> From<DynRealDft<T>> for Box<[Complex<T>]> {
     fn from(dyn_real_dft: DynRealDft<T>) -> Self {
