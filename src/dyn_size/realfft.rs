@@ -398,6 +398,19 @@ impl<T> DynRealDft<T> {
     }
 }
 
+impl<T: FftNum + Default> DynRealDft<T> {
+    #[cfg(feature = "fallible")]
+    /// Allocate a default DFT with provided `original_length`.
+    #[must_use]
+    pub fn default(original_length: usize) -> Self {
+        let inner = vec![Complex::default(); original_length / 2 + 1].into_boxed_slice();
+        Self {
+            original_length,
+            inner,
+        }
+    }
+}
+
 impl<T> From<DynRealDft<T>> for Box<[Complex<T>]> {
     fn from(dyn_real_dft: DynRealDft<T>) -> Self {
         dyn_real_dft.inner
