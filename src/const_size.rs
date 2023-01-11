@@ -22,6 +22,7 @@
 //!     assert_ulps_eq!(manipulated.im, original.im * complex_signal.len() as f64);
 //! }
 //! ```
+use array_init::map_array_init;
 use std::cell::UnsafeCell;
 
 #[rustfmt::skip]
@@ -98,21 +99,7 @@ impl<T: FftNum + Default, U: ?Sized + rustfft::Fft<T>, const SIZE: usize> Static
 
 impl<T: FftNum + Default, const SIZE: usize> Fft<T, SIZE> for [T; SIZE] {
     fn fft(&self) -> [Complex<T>; SIZE] {
-        // SAFETY:
-        // The function will only return None if the iterator is exhausted before the array
-        // is filled. The compiler ensures that the size of this array is always equal to the size
-        // of the array passed in, and therefore the size of the iterator, by the SIZE const
-        // generic argument. Therefore this function will never return a None value.
-        //
-        // TODO: Remove this and call `map_array_init` once this commit gets released:
-        // https://github.com/Manishearth/array-init/commit/9496096148b4933416a2435de65b9fa844872127
-        let mut buffer: [Complex<T>; SIZE] = unsafe {
-            array_init::from_iter(
-                self.iter()
-                    .map(|sample| Complex::new(*sample, T::default())),
-            )
-            .unwrap_unchecked()
-        };
+        let mut buffer = map_array_init(self, |sample| Complex::new(*sample, T::default()));
 
         get_fft_algorithm::<T>(SIZE).process_with_static_scratch(&mut buffer);
         buffer
