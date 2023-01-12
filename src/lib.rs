@@ -57,9 +57,12 @@ pub mod prelude {
     pub use crate::dyn_size::DynIfftMut;
 }
 
-fn with_fft_algorithm<T: FftNum>(size: usize, mut with: impl FnMut(Arc<dyn rustfft::Fft<T>>)) {
-    let with = |planner: &mut FftPlanner<T>| with(planner.plan_fft_forward(size));
+fn with_fft_planner<T: FftNum>(with: impl FnMut(&mut FftPlanner<T>)) {
     generic_singleton::get_or_init_thread_local!(|| FftPlanner::new(), with);
+}
+
+fn with_fft_algorithm<T: FftNum>(size: usize, mut with: impl FnMut(Arc<dyn rustfft::Fft<T>>)) {
+    with_fft_planner(|planner: &mut FftPlanner<T>| with(planner.plan_fft_forward(size)));
 }
 
 fn with_inverse_fft_algorithm<T: FftNum>(
@@ -67,7 +70,7 @@ fn with_inverse_fft_algorithm<T: FftNum>(
     mut with: impl FnMut(Arc<dyn rustfft::Fft<T>>),
 ) {
     let with = |planner: &mut FftPlanner<T>| with(planner.plan_fft_inverse(size));
-    generic_singleton::get_or_init_thread_local!(|| FftPlanner::new(), with);
+    with_fft_planner(with);
 }
 
 fn with_real_fft_algorithm<T: FftNum>(
