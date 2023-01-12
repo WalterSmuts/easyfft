@@ -13,12 +13,9 @@
 // The pattern `SIZE / 2 + 1` is common in this code. Removing the trailing `+ 1` is confusing.
 #![allow(clippy::range_plus_one)]
 
-#[rustfmt::skip]
-use ::realfft::ComplexToReal;
-#[rustfmt::skip]
-use ::realfft::RealFftPlanner;
-#[rustfmt::skip]
-use ::realfft::RealToComplex;
+use realfft::ComplexToReal;
+use realfft::RealFftPlanner;
+use realfft::RealToComplex;
 use rustfft::FftPlanner;
 use std::sync::Arc;
 
