@@ -235,17 +235,6 @@ impl<T: Default + FftNum> Add for &DynRealDft<T> {
     }
 }
 
-// TODO: Remove this implementation for next major version. Rhs does not require ownership.
-#[cfg(feature = "fallible")]
-impl<T: Default + FftNum> AddAssign for DynRealDft<T> {
-    fn add_assign(&mut self, rhs: Self) {
-        assert_eq!(self.len(), rhs.len());
-        for (i, r) in self.inner.iter_mut().zip(rhs.iter()) {
-            *i = *i + r;
-        }
-    }
-}
-
 #[cfg(feature = "fallible")]
 impl<T: Default + FftNum> AddAssign<&Self> for DynRealDft<T> {
     fn add_assign(&mut self, rhs: &Self) {
