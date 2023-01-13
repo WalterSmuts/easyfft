@@ -217,10 +217,10 @@ where
         let mut output = [Complex::default(); SIZE / 2 + 1];
         with_real_fft_algorithm::<T>(SIZE, |r2c| {
             // TODO: Remove default dependency and unnesasary initialization
+            // Pending issue: https://github.com/ejmahler/RustFFT/issues/105
             generic_singleton::get_or_init_thread_local!(
                 || [Complex::default(); SIZE],
                 |scratch_buffer_ref| {
-                    // TODO: remove this clone
                     r2c.process_with_scratch(&mut self.clone(), &mut output, scratch_buffer_ref)
                         .unwrap_unchecked();
                 }
@@ -237,12 +237,12 @@ where
 {
     fn real_ifft(&self) -> [T; SIZE] {
         // TODO: Remove default dependency and unnesasary initialization
+        // Pending issue: https://github.com/ejmahler/RustFFT/issues/105
         let mut output = [T::default(); SIZE];
         with_inverse_real_fft_algorithm::<T>(SIZE, |c2r| {
             generic_singleton::get_or_init_thread_local!(
                 || [Complex::default(); SIZE],
                 |scratch_buffer_ref| {
-                    // TODO: remove this clone
                     c2r.process_with_scratch(&mut (*self).clone(), &mut output, scratch_buffer_ref)
                         .unwrap_unchecked();
                 }

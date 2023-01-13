@@ -65,6 +65,8 @@ trait StaticScratchFft<T: FftNum>: Fft<T> {
     fn process_with_static_scratch(&self, buffer: &mut [Complex<T>]);
 }
 
+// TODO: Remove Default bound and unnesasary initialization
+// Pending issue: https://github.com/ejmahler/RustFFT/issues/105
 impl<T: FftNum + Default, U: ?Sized + Fft<T>> StaticScratchFft<T> for U {
     fn process_with_static_scratch(&self, buffer: &mut [Complex<T>]) {
         generic_singleton::get_or_init_thread_local!(
@@ -82,7 +84,6 @@ impl<T: FftNum + Default, U: ?Sized + Fft<T>> StaticScratchFft<T> for U {
 
 impl<T: FftNum + Default> DynFft<T> for [T] {
     fn fft(&self) -> Box<[Complex<T>]> {
-        // TODO: Remove unnesasary initialization
         let mut buffer = Vec::with_capacity(self.len());
         for sample in self {
             buffer.push(Complex::new(*sample, T::default()));
@@ -97,26 +98,22 @@ impl<T: FftNum + Default> DynFft<T> for [T] {
 
 impl<T: FftNum + Default> DynFft<T> for [Complex<T>] {
     fn fft(&self) -> Box<[Complex<T>]> {
-        // TODO: Remove unnesasary initialization
-        let mut buffer = vec![Complex::default(); self.len()];
-        buffer.clone_from_slice(self);
+        let mut buffer: Box<[Complex<T>]> = self.into();
 
         crate::with_fft_algorithm::<T>(self.len(), |fft| {
             fft.process_with_static_scratch(&mut buffer);
         });
-        buffer.into_boxed_slice()
+        buffer
     }
 }
 
 impl<T: FftNum + Default> DynIfft<T> for [Complex<T>] {
     fn ifft(&self) -> Box<[Complex<T>]> {
-        // TODO: Remove unnesasary initialization
-        let mut buffer = vec![Complex::default(); self.len()];
-        buffer.copy_from_slice(self);
+        let mut buffer: Box<[Complex<T>]> = self.into();
         crate::with_inverse_fft_algorithm::<T>(self.len(), |fft| {
             fft.process_with_static_scratch(&mut buffer);
         });
-        buffer.into_boxed_slice()
+        buffer
     }
 }
 

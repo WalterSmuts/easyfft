@@ -402,6 +402,7 @@ impl<T> From<DynRealDft<T>> for Box<[Complex<T>]> {
 impl<T: FftNum + Default> DynRealFft<T> for [T] {
     fn real_fft(&self) -> DynRealDft<T> {
         // TODO: Remove default dependency and unnesasary initialization
+        // Pending issue: https://github.com/ejmahler/RustFFT/issues/105
         let output = vec![Complex::default(); self.len() / 2 + 1];
         let mut output = DynRealDft {
             inner: output.into_boxed_slice(),
