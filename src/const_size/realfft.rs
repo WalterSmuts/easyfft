@@ -35,6 +35,7 @@
 
 use array_init::array_init;
 use realfft::num_traits::NumAssign;
+use realfft::num_traits::Zero;
 use rustfft::num_complex::Complex;
 use rustfft::FftNum;
 use std::ops::Add;
@@ -93,7 +94,7 @@ where
     inner: [Complex<T>; SIZE / 2 + 1],
 }
 
-impl<T: Default + Copy, const SIZE: usize> RealDft<T, SIZE>
+impl<T: Default + Zero + FftNum, const SIZE: usize> RealDft<T, SIZE>
 where
     [T; SIZE / 2 + 1]: Sized,
 {
@@ -121,7 +122,7 @@ where
         // unnesasary initialization. Pending on issue:
         // https://github.com/rust-lang/rust/issues/101849
         let mut inner = [Complex::default(); SIZE / 2 + 1];
-        inner[0] = Complex::new(zeroth_bin, T::default());
+        inner[0] = Complex::new(zeroth_bin, T::zero());
         inner[1..frequency_bins.len() + 1].copy_from_slice(&frequency_bins);
         Self { inner }
     }

@@ -28,6 +28,8 @@ use array_init::map_array_init;
 use ::realfft::num_complex::Complex;
 #[rustfmt::skip]
 use ::realfft::FftNum;
+#[rustfmt::skip]
+use ::realfft::num_traits::Zero;
 
 use crate::with_fft_algorithm;
 use crate::with_inverse_fft_algorithm;
@@ -80,9 +82,9 @@ impl<T: FftNum + Default, U: ?Sized + rustfft::Fft<T>, const SIZE: usize> Static
     }
 }
 
-impl<T: FftNum + Default, const SIZE: usize> Fft<T, SIZE> for [T; SIZE] {
+impl<T: FftNum + Default + Zero, const SIZE: usize> Fft<T, SIZE> for [T; SIZE] {
     fn fft(&self) -> [Complex<T>; SIZE] {
-        let mut buffer = map_array_init(self, |sample| Complex::new(*sample, T::default()));
+        let mut buffer = map_array_init(self, |sample| Complex::new(*sample, T::zero()));
 
         with_fft_algorithm::<T>(SIZE, |algorithm| {
             algorithm.process_with_static_scratch(&mut buffer);

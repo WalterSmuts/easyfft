@@ -23,6 +23,7 @@
 //! }
 //! ```
 use realfft::num_traits::NumAssign;
+use realfft::num_traits::Zero;
 use realfft::ComplexToReal;
 use realfft::RealToComplex;
 use rustfft::num_complex::Complex;
@@ -177,7 +178,7 @@ pub struct DynRealDft<T> {
 }
 
 #[cfg(feature = "fallible")]
-impl<T: Default + Copy> DynRealDft<T> {
+impl<T: Zero + Copy> DynRealDft<T> {
     /// Create a new `DynRealDft` struct.
     ///
     /// You need to provide the size of the real-valued signal you expect it to produce as a
@@ -202,7 +203,7 @@ impl<T: Default + Copy> DynRealDft<T> {
     /// ```
     pub fn new(zeroth_bin: T, frequency_bins: &[Complex<T>], original_length: usize) -> Self {
         assert_eq!(original_length / 2 + 1, frequency_bins.len() + 1);
-        let inner = [&[Complex::new(zeroth_bin, T::default())], frequency_bins].concat();
+        let inner = [&[Complex::new(zeroth_bin, T::zero())], frequency_bins].concat();
         Self {
             original_length,
             inner: inner.into_boxed_slice(),
@@ -364,7 +365,7 @@ impl<T: FftNum + Default> DynRealDft<T> {
         }
     }
 }
-impl<T: FftNum> DynRealDft<T> {
+impl<T: FftNum + Zero> DynRealDft<T> {
     #[cfg(feature = "fallible")]
     /// Copy from a slice of Complex values.
     ///
@@ -376,7 +377,7 @@ impl<T: FftNum> DynRealDft<T> {
         assert_eq!(self.original_length / 2 + 1, slice.len());
         assert_eq!(slice[0].im, T::from_f32(0.0).unwrap());
         if self.original_length % 2 == 0 {
-            assert_eq!(slice[slice.len() - 1].im, T::from_f32(0.0).unwrap());
+            assert_eq!(slice[slice.len() - 1].im, T::zero());
         }
         self.inner.copy_from_slice(slice);
     }

@@ -27,6 +27,8 @@
 //! ```
 use std::collections::HashMap;
 
+#[rustfmt::skip]
+use ::realfft::num_traits::Zero;
 use rustfft::num_complex::Complex;
 use rustfft::Fft;
 use rustfft::FftNum;
@@ -82,11 +84,11 @@ impl<T: FftNum + Default, U: ?Sized + Fft<T>> StaticScratchFft<T> for U {
     }
 }
 
-impl<T: FftNum + Default> DynFft<T> for [T] {
+impl<T: FftNum + Default + Zero> DynFft<T> for [T] {
     fn fft(&self) -> Box<[Complex<T>]> {
         let mut buffer = Vec::with_capacity(self.len());
         for sample in self {
-            buffer.push(Complex::new(*sample, T::default()));
+            buffer.push(Complex::new(*sample, T::zero()));
         }
 
         crate::with_fft_algorithm::<T>(self.len(), |algorithm| {
