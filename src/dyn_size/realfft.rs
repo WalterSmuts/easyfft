@@ -29,6 +29,7 @@ use realfft::RealToComplex;
 use rustfft::num_complex::Complex;
 use rustfft::FftNum;
 use std::collections::HashMap;
+use std::fmt::Debug;
 #[cfg(feature = "fallible")]
 use std::ops::Add;
 #[cfg(feature = "fallible")]
@@ -178,7 +179,10 @@ pub struct DynRealDft<T> {
 }
 
 #[cfg(feature = "fallible")]
-impl<T: Zero + Copy> DynRealDft<T> {
+impl<T> DynRealDft<T>
+where
+    T: Zero + Copy + PartialEq + Debug,
+{
     /// Create a new `DynRealDft` struct.
     ///
     /// You need to provide the size of the real-valued signal you expect it to produce as a
@@ -203,6 +207,9 @@ impl<T: Zero + Copy> DynRealDft<T> {
     /// ```
     pub fn new(zeroth_bin: T, frequency_bins: &[Complex<T>], original_length: usize) -> Self {
         assert_eq!(original_length / 2 + 1, frequency_bins.len() + 1);
+        if original_length % 2 == 0 {
+            assert_eq!(frequency_bins[frequency_bins.len() - 1].im, T::zero());
+        }
         let inner = [&[Complex::new(zeroth_bin, T::zero())], frequency_bins].concat();
         Self {
             original_length,
