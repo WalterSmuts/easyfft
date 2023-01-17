@@ -44,7 +44,6 @@ pub mod prelude {
     pub use crate::const_size::Ifft;
     pub use crate::const_size::IfftMut;
 
-    pub use crate::dyn_size::realfft::DynRealDft;
     pub use crate::dyn_size::realfft::DynRealFft;
     pub use crate::dyn_size::realfft::DynRealIfft;
 
