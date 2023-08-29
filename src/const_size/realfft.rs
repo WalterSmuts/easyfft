@@ -300,7 +300,7 @@ where
     [T; SIZE / 2 + 1]: Sized,
 {
     fn mul_assign(&mut self, rhs: T) {
-        for bin_self in self.inner.iter_mut() {
+        for bin_self in &mut self.inner {
             *bin_self *= rhs;
         }
     }

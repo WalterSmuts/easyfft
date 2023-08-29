@@ -297,7 +297,7 @@ impl<T: Default + FftNum> Mul<T> for &DynRealDft<T> {
 
 impl<T: Default + FftNum + NumAssign> MulAssign<T> for DynRealDft<T> {
     fn mul_assign(&mut self, rhs: T) {
-        for bin_self in self.inner.iter_mut() {
+        for bin_self in &mut *self.inner {
             *bin_self *= rhs;
         }
     }
