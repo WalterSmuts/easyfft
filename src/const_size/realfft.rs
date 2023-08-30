@@ -101,7 +101,7 @@ where
     /// Create a new `RealDft` struct.
     ///
     /// You need to provide the size of the real-valued signal you expect it to produce as a
-    /// generic arguement unless it can infer from context.
+    /// generic argument unless it can infer from context.
     ///
     /// ```
     /// #![allow(incomplete_features)]
