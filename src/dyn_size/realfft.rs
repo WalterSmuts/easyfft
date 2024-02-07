@@ -28,6 +28,12 @@ use realfft::ComplexToReal;
 use realfft::RealToComplex;
 use rustfft::num_complex::Complex;
 use rustfft::FftNum;
+
+#[cfg(feature = "serde")]
+use serde::Deserialize;
+#[cfg(feature = "serde")]
+use serde::Serialize;
+
 use std::collections::HashMap;
 use std::fmt::Debug;
 #[cfg(feature = "fallible")]
@@ -173,6 +179,7 @@ impl<T: FftNum + Default, U: ?Sized + RealToComplex<T>> StaticScratchRealToCompl
 /// [known to be symmetric]: https://en.wikipedia.org/wiki/Discrete_Fourier_transform#DFT_of_real_and_purely_imaginary_signals
 /// [phantom type]: https://doc.rust-lang.org/rust-by-example/generics/phantom.html
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct DynRealDft<T> {
     original_length: usize,
     inner: Box<[Complex<T>]>,

@@ -25,8 +25,10 @@ default = ["fallible"]
 [dependencies]
 array-init = "2.1.0"
 generic_singleton = "0.4.1"
+num-complex = { version = "0.4.5", features = ["serde"] }
 realfft = { version = "3.0.1"}
 rustfft = "6.0.1"
+serde = { version = "1.0.193", features = ["derive"] , optional = true}
 
 [dev-dependencies]
 approx = "0.5.1"
