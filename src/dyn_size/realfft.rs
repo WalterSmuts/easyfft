@@ -83,6 +83,7 @@ trait StaticScratchComplexToReal<T: FftNum>: ComplexToReal<T> {
     unsafe fn process_with_static_scratch(&self, input: &[Complex<T>], output: &mut [T]);
 }
 
+#[cfg(not(feature = "fallible"))]
 trait PrivateRealFftUsing<T> {
     fn real_fft_using(&self, output: &mut DynRealDft<T>);
 }
@@ -386,7 +387,7 @@ impl<T: FftNum + Zero> DynRealDft<T> {
     /// # Panics
     /// * Panics if the `original_length / 2 + 1` is not equal to `slice.len()`.
     /// * If the first element of the slice has a non-zero imaginary component or the last element if
-    /// `original_length` is odd.
+    ///   `original_length` is odd.
     pub fn copy_from_slice(&mut self, slice: &[Complex<T>]) {
         assert_eq!(self.original_length / 2 + 1, slice.len());
         assert_eq!(slice[0].im, T::from_f32(0.0).unwrap());
