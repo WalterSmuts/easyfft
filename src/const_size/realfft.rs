@@ -224,6 +224,9 @@ where
                 || RefCell::new([Complex::default(); SIZE]),
                 |scratch_buffer_ref| {
                     let mut scratch_buffer_ref = scratch_buffer_ref.borrow_mut();
+                    // SAFETY:
+                    // The sizes of the arrays are checked at compile time so therefore we cannot
+                    // have an Err here - therefore unwrap_unchecked is safe.
                     unsafe {
                         r2c.process_with_scratch(
                             &mut self.clone(),
@@ -253,6 +256,9 @@ where
                 || RefCell::new([Complex::default(); SIZE]),
                 |scratch_buffer_ref| {
                     let mut scratch_buffer_ref = scratch_buffer_ref.borrow_mut();
+                    // SAFETY:
+                    // The sizes of the arrays are checked at compile time so therefore we cannot
+                    // have an Err here - therefore unwrap_unchecked is safe.
                     unsafe {
                         c2r.process_with_scratch(
                             &mut (*self).clone(),

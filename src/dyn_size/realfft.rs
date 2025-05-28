@@ -114,8 +114,13 @@ impl<T: FftNum + Default, U: ?Sized + ComplexToReal<T>> StaticScratchComplexToRe
                         });
 
                         input_clone.copy_from_slice(input);
-                        self.process_with_scratch(input_clone, output, scratch)
-                            .unwrap_unchecked();
+                        // SAFETY:
+                        // This is the pre-condition that the caller of the outer function needs to
+                        // check.
+                        unsafe {
+                            self.process_with_scratch(input_clone, output, scratch)
+                                .unwrap_unchecked();
+                        }
                     }
                 );
             }
@@ -154,8 +159,14 @@ impl<T: FftNum + Default, U: ?Sized + RealToComplex<T>> StaticScratchRealToCompl
                             .or_insert_with(|| vec![T::default(); input.len()].into_boxed_slice());
 
                         input_clone.copy_from_slice(input);
-                        self.process_with_scratch(input_clone, output, scratch)
-                            .unwrap_unchecked();
+
+                        // SAFETY:
+                        // This is the pre-condition that the caller of the outer function needs to
+                        // check.
+                        unsafe {
+                            self.process_with_scratch(input_clone, output, scratch)
+                                .unwrap_unchecked();
+                        }
                     }
                 );
             }
