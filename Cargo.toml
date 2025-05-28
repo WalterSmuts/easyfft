@@ -2,7 +2,7 @@
 name = "easyfft"
 version = "0.4.1"
 authors = ["Walter Smuts <smuts.walter@gmail.com>"]
-edition = "2021"
+edition = "2024"
 license = "MIT OR Apache-2.0"
 description = "A library crate providing an easy FFT API for arrays and slices"
 documentation = "https://docs.rs/easyfft/"
