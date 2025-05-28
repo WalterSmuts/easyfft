@@ -38,6 +38,7 @@ use realfft::num_traits::NumAssign;
 use realfft::num_traits::Zero;
 use rustfft::num_complex::Complex;
 use rustfft::FftNum;
+use std::cell::RefCell;
 use std::ops::Add;
 use std::ops::AddAssign;
 use std::ops::Deref;
@@ -220,10 +221,17 @@ where
             // TODO: Remove default dependency and unnesasary initialization
             // Pending issue: https://github.com/ejmahler/RustFFT/issues/105
             generic_singleton::get_or_init_thread_local!(
-                || [Complex::default(); SIZE],
+                || RefCell::new([Complex::default(); SIZE]),
                 |scratch_buffer_ref| {
-                    r2c.process_with_scratch(&mut self.clone(), &mut output, scratch_buffer_ref)
+                    let mut scratch_buffer_ref = scratch_buffer_ref.borrow_mut();
+                    unsafe {
+                        r2c.process_with_scratch(
+                            &mut self.clone(),
+                            &mut output,
+                            &mut *scratch_buffer_ref,
+                        )
                         .unwrap_unchecked();
+                    }
                 }
             );
         });
@@ -242,10 +250,17 @@ where
         let mut output = [T::default(); SIZE];
         with_inverse_real_fft_algorithm::<T>(SIZE, |c2r| {
             generic_singleton::get_or_init_thread_local!(
-                || [Complex::default(); SIZE],
+                || RefCell::new([Complex::default(); SIZE]),
                 |scratch_buffer_ref| {
-                    c2r.process_with_scratch(&mut (*self).clone(), &mut output, scratch_buffer_ref)
+                    let mut scratch_buffer_ref = scratch_buffer_ref.borrow_mut();
+                    unsafe {
+                        c2r.process_with_scratch(
+                            &mut (*self).clone(),
+                            &mut output,
+                            &mut *scratch_buffer_ref,
+                        )
                         .unwrap_unchecked();
+                    }
                 }
             );
         });

@@ -17,6 +17,7 @@ use realfft::ComplexToReal;
 use realfft::RealFftPlanner;
 use realfft::RealToComplex;
 use rustfft::FftPlanner;
+use std::cell::RefCell;
 use std::sync::Arc;
 
 pub use rustfft::num_complex;
@@ -53,19 +54,25 @@ pub mod prelude {
     pub use crate::dyn_size::DynIfftMut;
 }
 
-fn with_fft_planner<T: FftNum>(with: impl FnMut(&mut FftPlanner<T>)) {
-    generic_singleton::get_or_init_thread_local!(|| FftPlanner::new(), with);
+fn with_fft_planner<T: FftNum>(with: impl FnMut(&RefCell<FftPlanner<T>>)) {
+    generic_singleton::get_or_init_thread_local!(|| RefCell::new(FftPlanner::new()), with);
 }
 
 fn with_fft_algorithm<T: FftNum>(size: usize, mut with: impl FnMut(Arc<dyn rustfft::Fft<T>>)) {
-    with_fft_planner(|planner: &mut FftPlanner<T>| with(planner.plan_fft_forward(size)));
+    with_fft_planner(|planner: &RefCell<FftPlanner<T>>| {
+        let mut planner = planner.borrow_mut();
+        with(planner.plan_fft_forward(size))
+    });
 }
 
 fn with_inverse_fft_algorithm<T: FftNum>(
     size: usize,
     mut with: impl FnMut(Arc<dyn rustfft::Fft<T>>),
 ) {
-    let with = |planner: &mut FftPlanner<T>| with(planner.plan_fft_inverse(size));
+    let with = |planner: &RefCell<FftPlanner<T>>| {
+        let mut planner = planner.borrow_mut();
+        with(planner.plan_fft_inverse(size))
+    };
     with_fft_planner(with);
 }
 
@@ -73,14 +80,20 @@ fn with_real_fft_algorithm<T: FftNum>(
     size: usize,
     mut with: impl FnMut(Arc<dyn RealToComplex<T>>),
 ) {
-    let with = |planner: &mut RealFftPlanner<T>| with(planner.plan_fft_forward(size));
-    generic_singleton::get_or_init_thread_local!(|| RealFftPlanner::new(), with);
+    let with = |planner: &RefCell<RealFftPlanner<T>>| {
+        let mut planner = planner.borrow_mut();
+        with(planner.plan_fft_forward(size))
+    };
+    generic_singleton::get_or_init_thread_local!(|| RefCell::new(RealFftPlanner::new()), with);
 }
 
 fn with_inverse_real_fft_algorithm<T: FftNum>(
     size: usize,
     mut with: impl FnMut(Arc<dyn ComplexToReal<T>>),
 ) {
-    let with = |planner: &mut RealFftPlanner<T>| with(planner.plan_fft_inverse(size));
-    generic_singleton::get_or_init_thread_local!(|| RealFftPlanner::new(), with);
+    let with = |planner: &RefCell<RealFftPlanner<T>>| {
+        let mut planner = planner.borrow_mut();
+        with(planner.plan_fft_inverse(size))
+    };
+    generic_singleton::get_or_init_thread_local!(|| RefCell::new(RealFftPlanner::new()), with);
 }

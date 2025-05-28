@@ -34,6 +34,7 @@ use serde::Deserialize;
 #[cfg(feature = "serde")]
 use serde::Serialize;
 
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fmt::Debug;
 #[cfg(feature = "fallible")]
@@ -93,19 +94,21 @@ impl<T: FftNum + Default, U: ?Sized + ComplexToReal<T>> StaticScratchComplexToRe
     unsafe fn process_with_static_scratch(&self, input: &[Complex<T>], output: &mut [T]) {
         debug_assert_eq!(input.len(), output.len() / 2 + 1);
         generic_singleton::get_or_init_thread_local!(
-            HashMap::<usize, Box<[Complex<T>]>>::new,
+            || RefCell::new(HashMap::<usize, Box<[Complex<T>]>>::new()),
             |input_clone_map| {
                 generic_singleton::get_or_init_thread_local!(
-                    || { HashMap::<usize, Box<[Complex<T>]>>::new() },
+                    || RefCell::new(HashMap::<usize, Box<[Complex<T>]>>::new()),
                     |scratch_buffer_map| {
                         let scratch_buffer_len = self.get_scratch_len();
 
+                        let mut scratch_buffer_map = scratch_buffer_map.borrow_mut();
                         let scratch =
                             scratch_buffer_map
                                 .entry(scratch_buffer_len)
                                 .or_insert_with(|| {
                                     vec![Complex::default(); scratch_buffer_len].into_boxed_slice()
                                 });
+                        let mut input_clone_map = input_clone_map.borrow_mut();
                         let input_clone = input_clone_map.entry(input.len()).or_insert_with(|| {
                             vec![Complex::default(); input.len()].into_boxed_slice()
                         });
@@ -130,12 +133,13 @@ impl<T: FftNum + Default, U: ?Sized + RealToComplex<T>> StaticScratchRealToCompl
         debug_assert_eq!(input.len() / 2 + 1, output.len());
 
         generic_singleton::get_or_init_thread_local!(
-            HashMap::<usize, Box<[T]>>::new,
+            || RefCell::new(HashMap::<usize, Box<[T]>>::new()),
             |input_clone_map| {
                 generic_singleton::get_or_init_thread_local!(
-                    HashMap::<usize, Box<[Complex<T>]>>::new,
+                    || RefCell::new(HashMap::<usize, Box<[Complex<T>]>>::new()),
                     |scratch_buffer_map| {
                         let scratch_buffer_len = self.get_scratch_len();
+                        let mut scratch_buffer_map = scratch_buffer_map.borrow_mut();
 
                         let scratch =
                             scratch_buffer_map
@@ -143,6 +147,8 @@ impl<T: FftNum + Default, U: ?Sized + RealToComplex<T>> StaticScratchRealToCompl
                                 .or_insert_with(|| {
                                     vec![Complex::default(); scratch_buffer_len].into_boxed_slice()
                                 });
+
+                        let mut input_clone_map = input_clone_map.borrow_mut();
                         let input_clone = input_clone_map
                             .entry(input.len())
                             .or_insert_with(|| vec![T::default(); input.len()].into_boxed_slice());

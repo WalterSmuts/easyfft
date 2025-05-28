@@ -22,6 +22,8 @@
 //!     assert_ulps_eq!(manipulated.im, original.im * complex_signal.len() as f64);
 //! }
 //! ```
+use std::cell::RefCell;
+
 use array_init::map_array_init;
 
 #[rustfmt::skip]
@@ -74,9 +76,10 @@ impl<T: FftNum + Default, U: ?Sized + rustfft::Fft<T>, const SIZE: usize> Static
 {
     fn process_with_static_scratch(&self, buffer: &mut [Complex<T>; SIZE]) {
         generic_singleton::get_or_init_thread_local!(
-            || [Complex::default(); SIZE],
+            || RefCell::new([Complex::default(); SIZE]),
             |scratch_buffer_ref| {
-                self.process_with_scratch(buffer, scratch_buffer_ref);
+                let mut scratch_buffer_ref = scratch_buffer_ref.borrow_mut();
+                self.process_with_scratch(buffer, &mut *scratch_buffer_ref);
             }
         );
     }

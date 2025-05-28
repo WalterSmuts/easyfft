@@ -25,6 +25,7 @@
 //!     assert_ulps_eq!(manipulated.im, original.im * complex_signal.len() as f64);
 //! }
 //! ```
+use std::cell::RefCell;
 use std::collections::HashMap;
 
 #[rustfmt::skip]
@@ -72,9 +73,10 @@ trait StaticScratchFft<T: FftNum>: Fft<T> {
 impl<T: FftNum + Default, U: ?Sized + Fft<T>> StaticScratchFft<T> for U {
     fn process_with_static_scratch(&self, buffer: &mut [Complex<T>]) {
         generic_singleton::get_or_init_thread_local!(
-            || { HashMap::<usize, Box<[Complex<T>]>>::new() },
+            || RefCell::new(HashMap::<usize, Box<[Complex<T>]>>::new()),
             |map| {
                 let len = self.get_inplace_scratch_len();
+                let mut map = map.borrow_mut();
                 let scratch = map
                     .entry(len)
                     .or_insert_with(|| vec![Complex::default(); len].into_boxed_slice());
