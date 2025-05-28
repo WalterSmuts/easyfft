@@ -1,6 +1,6 @@
 [package]
 name = "easyfft"
-version = "0.4.1"
+version = "0.4.2"
 authors = ["Walter Smuts <smuts.walter@gmail.com>"]
 edition = "2024"
 license = "MIT OR Apache-2.0"
