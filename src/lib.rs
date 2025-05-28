@@ -61,7 +61,7 @@ fn with_fft_planner<T: FftNum>(with: impl FnMut(&RefCell<FftPlanner<T>>)) {
 fn with_fft_algorithm<T: FftNum>(size: usize, mut with: impl FnMut(Arc<dyn rustfft::Fft<T>>)) {
     with_fft_planner(|planner: &RefCell<FftPlanner<T>>| {
         let mut planner = planner.borrow_mut();
-        with(planner.plan_fft_forward(size))
+        with(planner.plan_fft_forward(size));
     });
 }
 
@@ -71,7 +71,7 @@ fn with_inverse_fft_algorithm<T: FftNum>(
 ) {
     let with = |planner: &RefCell<FftPlanner<T>>| {
         let mut planner = planner.borrow_mut();
-        with(planner.plan_fft_inverse(size))
+        with(planner.plan_fft_inverse(size));
     };
     with_fft_planner(with);
 }
@@ -82,7 +82,7 @@ fn with_real_fft_algorithm<T: FftNum>(
 ) {
     let with = |planner: &RefCell<RealFftPlanner<T>>| {
         let mut planner = planner.borrow_mut();
-        with(planner.plan_fft_forward(size))
+        with(planner.plan_fft_forward(size));
     };
     generic_singleton::get_or_init_thread_local!(|| RefCell::new(RealFftPlanner::new()), with);
 }
@@ -93,7 +93,7 @@ fn with_inverse_real_fft_algorithm<T: FftNum>(
 ) {
     let with = |planner: &RefCell<RealFftPlanner<T>>| {
         let mut planner = planner.borrow_mut();
-        with(planner.plan_fft_inverse(size))
+        with(planner.plan_fft_inverse(size));
     };
     generic_singleton::get_or_init_thread_local!(|| RefCell::new(RealFftPlanner::new()), with);
 }
