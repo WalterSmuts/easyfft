@@ -36,8 +36,8 @@
 use array_init::array_init;
 use realfft::num_traits::NumAssign;
 use realfft::num_traits::Zero;
-use rustfft::num_complex::Complex;
 use rustfft::FftNum;
+use rustfft::num_complex::Complex;
 use std::cell::RefCell;
 use std::ops::Add;
 use std::ops::AddAssign;

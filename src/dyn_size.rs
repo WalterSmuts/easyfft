@@ -30,9 +30,9 @@ use std::collections::HashMap;
 
 #[rustfmt::skip]
 use ::realfft::num_traits::Zero;
-use rustfft::num_complex::Complex;
 use rustfft::Fft;
 use rustfft::FftNum;
+use rustfft::num_complex::Complex;
 
 pub mod realfft;
 

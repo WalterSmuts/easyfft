@@ -22,12 +22,12 @@
 //!     assert_ulps_eq!(*manipulated, original * 10.0);
 //! }
 //! ```
-use realfft::num_traits::NumAssign;
-use realfft::num_traits::Zero;
 use realfft::ComplexToReal;
 use realfft::RealToComplex;
-use rustfft::num_complex::Complex;
+use realfft::num_traits::NumAssign;
+use realfft::num_traits::Zero;
 use rustfft::FftNum;
+use rustfft::num_complex::Complex;
 
 #[cfg(feature = "serde")]
 use serde::Deserialize;
