@@ -22,12 +22,12 @@
 //!     assert_ulps_eq!(*manipulated, original * 10.0);
 //! }
 //! ```
-use realfft::ComplexToReal;
-use realfft::RealToComplex;
 use realfft::num_traits::NumAssign;
 use realfft::num_traits::Zero;
-use rustfft::FftNum;
+use realfft::ComplexToReal;
+use realfft::RealToComplex;
 use rustfft::num_complex::Complex;
+use rustfft::FftNum;
 
 #[cfg(feature = "serde")]
 use serde::Deserialize;
@@ -93,21 +93,19 @@ trait PrivateRealFftUsing<T> {
 impl<T: FftNum + Default, U: ?Sized + ComplexToReal<T>> StaticScratchComplexToReal<T> for U {
     unsafe fn process_with_static_scratch(&self, input: &[Complex<T>], output: &mut [T]) {
         debug_assert_eq!(input.len(), output.len() / 2 + 1);
-        generic_singleton::get_or_init_thread_local!(
+        crate::get_or_init_thread_local!(
             || RefCell::new(HashMap::<usize, Box<[Complex<T>]>>::new()),
             |input_clone_map| {
-                generic_singleton::get_or_init_thread_local!(
+                crate::get_or_init_thread_local!(
                     || RefCell::new(HashMap::<usize, Box<[Complex<T>]>>::new()),
                     |scratch_buffer_map| {
                         let scratch_buffer_len = self.get_scratch_len();
 
                         let mut scratch_buffer_map = scratch_buffer_map.borrow_mut();
                         let scratch =
-                            scratch_buffer_map
-                                .entry(scratch_buffer_len)
-                                .or_insert_with(|| {
-                                    vec![Complex::default(); scratch_buffer_len].into_boxed_slice()
-                                });
+                            scratch_buffer_map.entry(scratch_buffer_len).or_insert_with(|| {
+                                vec![Complex::default(); scratch_buffer_len].into_boxed_slice()
+                            });
                         let mut input_clone_map = input_clone_map.borrow_mut();
                         let input_clone = input_clone_map.entry(input.len()).or_insert_with(|| {
                             vec![Complex::default(); input.len()].into_boxed_slice()
@@ -137,21 +135,19 @@ impl<T: FftNum + Default, U: ?Sized + RealToComplex<T>> StaticScratchRealToCompl
     unsafe fn process_with_static_scratch(&self, input: &[T], output: &mut [Complex<T>]) {
         debug_assert_eq!(input.len() / 2 + 1, output.len());
 
-        generic_singleton::get_or_init_thread_local!(
+        crate::get_or_init_thread_local!(
             || RefCell::new(HashMap::<usize, Box<[T]>>::new()),
             |input_clone_map| {
-                generic_singleton::get_or_init_thread_local!(
+                crate::get_or_init_thread_local!(
                     || RefCell::new(HashMap::<usize, Box<[Complex<T>]>>::new()),
                     |scratch_buffer_map| {
                         let scratch_buffer_len = self.get_scratch_len();
                         let mut scratch_buffer_map = scratch_buffer_map.borrow_mut();
 
                         let scratch =
-                            scratch_buffer_map
-                                .entry(scratch_buffer_len)
-                                .or_insert_with(|| {
-                                    vec![Complex::default(); scratch_buffer_len].into_boxed_slice()
-                                });
+                            scratch_buffer_map.entry(scratch_buffer_len).or_insert_with(|| {
+                                vec![Complex::default(); scratch_buffer_len].into_boxed_slice()
+                            });
 
                         let mut input_clone_map = input_clone_map.borrow_mut();
                         let input_clone = input_clone_map
@@ -236,10 +232,7 @@ where
             assert_eq!(frequency_bins[frequency_bins.len() - 1].im, T::zero());
         }
         let inner = [&[Complex::new(zeroth_bin, T::zero())], frequency_bins].concat();
-        Self {
-            original_length,
-            inner: inner.into_boxed_slice(),
-        }
+        Self { original_length, inner: inner.into_boxed_slice() }
     }
 }
 
@@ -261,10 +254,7 @@ impl<T: Default + FftNum> Add for &DynRealDft<T> {
         for (i, r) in inner.iter_mut().zip(rhs.iter()) {
             *i = *i + r;
         }
-        DynRealDft {
-            original_length: self.original_length,
-            inner,
-        }
+        DynRealDft { original_length: self.original_length, inner }
     }
 }
 
@@ -288,10 +278,7 @@ impl<T: Default + FftNum> Mul for &DynRealDft<T> {
         for index in 0..self.len() {
             inner.push(self[index] * rhs[index]);
         }
-        DynRealDft {
-            inner: inner.into_boxed_slice(),
-            original_length: self.original_length,
-        }
+        DynRealDft { inner: inner.into_boxed_slice(), original_length: self.original_length }
     }
 }
 
@@ -313,10 +300,7 @@ impl<T: Default + FftNum> Mul<T> for &DynRealDft<T> {
         for index in 0..self.len() {
             inner.push(self[index] * rhs);
         }
-        DynRealDft {
-            inner: inner.into_boxed_slice(),
-            original_length: self.original_length,
-        }
+        DynRealDft { inner: inner.into_boxed_slice(), original_length: self.original_length }
     }
 }
 
@@ -338,10 +322,7 @@ impl<T: Default + FftNum> Mul<&[T]> for &DynRealDft<T> {
         for index in 0..self.len() {
             inner.push(self[index] * rhs[index]);
         }
-        DynRealDft {
-            inner: inner.into_boxed_slice(),
-            original_length: self.original_length,
-        }
+        DynRealDft { inner: inner.into_boxed_slice(), original_length: self.original_length }
     }
 }
 
@@ -391,10 +372,7 @@ impl<T: FftNum + Default> DynRealDft<T> {
     #[must_use]
     pub fn default(original_length: usize) -> Self {
         let inner = vec![Complex::default(); original_length / 2 + 1].into_boxed_slice();
-        Self {
-            original_length,
-            inner,
-        }
+        Self { original_length, inner }
     }
 }
 impl<T: FftNum + Zero> DynRealDft<T> {
@@ -426,10 +404,8 @@ impl<T: FftNum + Default> DynRealFft<T> for [T] {
         // TODO: Remove default dependency and unnesasary initialization
         // Pending issue: https://github.com/ejmahler/RustFFT/issues/105
         let output = vec![Complex::default(); self.len() / 2 + 1];
-        let mut output = DynRealDft {
-            inner: output.into_boxed_slice(),
-            original_length: self.len(),
-        };
+        let mut output =
+            DynRealDft { inner: output.into_boxed_slice(), original_length: self.len() };
         self.real_fft_using(&mut output);
         output
     }

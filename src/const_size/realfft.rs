@@ -36,8 +36,8 @@
 use array_init::array_init;
 use realfft::num_traits::NumAssign;
 use realfft::num_traits::Zero;
-use rustfft::FftNum;
 use rustfft::num_complex::Complex;
+use rustfft::FftNum;
 use std::cell::RefCell;
 use std::ops::Add;
 use std::ops::AddAssign;
@@ -220,7 +220,7 @@ where
         with_real_fft_algorithm::<T>(SIZE, |r2c| {
             // TODO: Remove default dependency and unnesasary initialization
             // Pending issue: https://github.com/ejmahler/RustFFT/issues/105
-            generic_singleton::get_or_init_thread_local!(
+            crate::get_or_init_thread_local!(
                 || RefCell::new([Complex::default(); SIZE]),
                 |scratch_buffer_ref| {
                     let mut scratch_buffer_ref = scratch_buffer_ref.borrow_mut();
@@ -252,7 +252,7 @@ where
         // Pending issue: https://github.com/ejmahler/RustFFT/issues/105
         let mut output = [T::default(); SIZE];
         with_inverse_real_fft_algorithm::<T>(SIZE, |c2r| {
-            generic_singleton::get_or_init_thread_local!(
+            crate::get_or_init_thread_local!(
                 || RefCell::new([Complex::default(); SIZE]),
                 |scratch_buffer_ref| {
                     let mut scratch_buffer_ref = scratch_buffer_ref.borrow_mut();

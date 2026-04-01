@@ -75,7 +75,7 @@ impl<T: FftNum + Default, U: ?Sized + rustfft::Fft<T>, const SIZE: usize> Static
     for U
 {
     fn process_with_static_scratch(&self, buffer: &mut [Complex<T>; SIZE]) {
-        generic_singleton::get_or_init_thread_local!(
+        crate::get_or_init_thread_local!(
             || RefCell::new([Complex::default(); SIZE]),
             |scratch_buffer_ref| {
                 let mut scratch_buffer_ref = scratch_buffer_ref.borrow_mut();
@@ -141,12 +141,8 @@ mod tests {
     const ACCEPTABLE_ERROR: f64 = 0.000_000_000_000_01;
 
     fn fft_and_ifft_are_inverse_operations<const SIZE: usize>(array: [f64; SIZE]) {
-        let converted: Vec<_> = array
-            .fft()
-            .ifft()
-            .iter_mut()
-            .map(|sample| *sample / array.len() as f64)
-            .collect();
+        let converted: Vec<_> =
+            array.fft().ifft().iter_mut().map(|sample| *sample / array.len() as f64).collect();
         assert_eq!(array.len(), converted.len());
         for (converted, original) in converted.iter().zip(array.iter()) {
             approx::assert_ulps_eq!(converted.re, original, epsilon = ACCEPTABLE_ERROR);

@@ -20,11 +20,12 @@ use rustfft::FftPlanner;
 use std::cell::RefCell;
 use std::sync::Arc;
 
-pub use rustfft::FftNum;
 pub use rustfft::num_complex;
+pub use rustfft::FftNum;
 
 pub mod const_size;
 pub mod dyn_size;
+pub mod thread_local_map;
 /// This module re-exports all the traits under a single namespace to be easily consumed.
 ///
 /// I generally believe glob-imports are to be avoided. There are exceptions though and I believe
@@ -55,7 +56,7 @@ pub mod prelude {
 }
 
 fn with_fft_planner<T: FftNum>(with: impl FnMut(&RefCell<FftPlanner<T>>)) {
-    generic_singleton::get_or_init_thread_local!(|| RefCell::new(FftPlanner::new()), with);
+    crate::get_or_init_thread_local!(|| RefCell::new(FftPlanner::new()), with);
 }
 
 fn with_fft_algorithm<T: FftNum>(size: usize, mut with: impl FnMut(Arc<dyn rustfft::Fft<T>>)) {
@@ -84,7 +85,7 @@ fn with_real_fft_algorithm<T: FftNum>(
         let mut planner = planner.borrow_mut();
         with(planner.plan_fft_forward(size));
     };
-    generic_singleton::get_or_init_thread_local!(|| RefCell::new(RealFftPlanner::new()), with);
+    crate::get_or_init_thread_local!(|| RefCell::new(RealFftPlanner::new()), with);
 }
 
 fn with_inverse_real_fft_algorithm<T: FftNum>(
@@ -95,5 +96,5 @@ fn with_inverse_real_fft_algorithm<T: FftNum>(
         let mut planner = planner.borrow_mut();
         with(planner.plan_fft_inverse(size));
     };
-    generic_singleton::get_or_init_thread_local!(|| RefCell::new(RealFftPlanner::new()), with);
+    crate::get_or_init_thread_local!(|| RefCell::new(RealFftPlanner::new()), with);
 }

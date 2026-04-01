@@ -30,9 +30,9 @@ use std::collections::HashMap;
 
 #[rustfmt::skip]
 use ::realfft::num_traits::Zero;
+use rustfft::num_complex::Complex;
 use rustfft::Fft;
 use rustfft::FftNum;
-use rustfft::num_complex::Complex;
 
 pub mod realfft;
 
@@ -72,7 +72,7 @@ trait StaticScratchFft<T: FftNum>: Fft<T> {
 // Pending issue: https://github.com/ejmahler/RustFFT/issues/105
 impl<T: FftNum + Default, U: ?Sized + Fft<T>> StaticScratchFft<T> for U {
     fn process_with_static_scratch(&self, buffer: &mut [Complex<T>]) {
-        generic_singleton::get_or_init_thread_local!(
+        crate::get_or_init_thread_local!(
             || RefCell::new(HashMap::<usize, Box<[Complex<T>]>>::new()),
             |map| {
                 let len = self.get_inplace_scratch_len();
