@@ -32,3 +32,4 @@ serde = { version = "1.0.193", features = ["derive"] , optional = true}
 
 [dev-dependencies]
 approx = "0.5.1"
+assert_no_alloc = "1.1"
