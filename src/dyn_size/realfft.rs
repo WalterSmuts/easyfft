@@ -476,15 +476,15 @@ impl<T: FftNum + Default> DynRealIfft<T> for DynRealDft<T> {
 impl<T: FftNum + Default> PrivateRealFftUsing<T> for [T] {
     fn real_fft_using(&self, output: &mut DynRealDft<T>) {
         debug_assert_eq!(self.len(), output.original_length);
-        let r2c = with_real_fft_algorithm::<T>(self.len());
-
-        // SAFETY:
-        // The error case only happens when the size of the input and output and fft algorithm are
-        // not consistent. Since all these are calculated inside this function and have been double
-        // checked and tested, we can be sure they won't be inconsistent.
-        unsafe {
-            r2c.process_with_static_scratch(self, &mut output.inner);
-        }
+        with_real_fft_algorithm::<T>(self.len(), |r2c| {
+            // SAFETY:
+            // The error case only happens when the size of the input and output and fft algorithm
+            // are not consistent. Since all these are calculated inside this function and have been
+            // double checked and tested, we can be sure they won't be inconsistent.
+            unsafe {
+                r2c.process_with_static_scratch(self, &mut output.inner);
+            }
+        });
     }
 }
 
@@ -493,15 +493,15 @@ impl<T: FftNum + Default> PrivateRealFftUsing<T> for [T] {
 impl<T: FftNum + Default> DynRealDft<T> {
     fn real_ifft_using(&self, output: &mut [T]) {
         debug_assert_eq!(self.original_length, output.len());
-        let c2r = with_inverse_real_fft_algorithm::<T>(self.original_length);
-
-        // SAFETY:
-        // The error case only happens when the size of the input and output and fft algorithm are
-        // not consistent. Since all these are calculated inside this function and have been double
-        // checked and tested, we can be sure they won't be inconsistent.
-        unsafe {
-            c2r.process_with_static_scratch(self, output);
-        }
+        with_inverse_real_fft_algorithm::<T>(self.original_length, |c2r| {
+            // SAFETY:
+            // The error case only happens when the size of the input and output and fft algorithm
+            // are not consistent. Since all these are calculated inside this function and have been
+            // double checked and tested, we can be sure they won't be inconsistent.
+            unsafe {
+                c2r.process_with_static_scratch(self, output);
+            }
+        });
     }
 }
 
@@ -537,5 +537,34 @@ mod tests {
     #[test]
     fn real_fft_and_real_ifft_are_inverse_operations_odd() {
         real_fft_and_real_ifft_are_inverse_operations(&ARBITRARY_ODD_TEST_ARRAY);
+    }
+}
+
+#[cfg(test)]
+mod alloc_tests {
+    use super::*;
+    use assert_no_alloc::assert_no_alloc;
+
+    #[test]
+    fn real_fft_using_does_not_allocate_after_warmup() {
+        let signal: &[f32] = &[1.0; 64];
+        let mut output = signal.real_fft();
+        // Warmup done by real_fft above. Now test real_fft_using:
+        signal.real_fft_using(&mut output);
+        assert_no_alloc(|| {
+            signal.real_fft_using(&mut output);
+        });
+    }
+
+    #[test]
+    fn real_ifft_using_does_not_allocate_after_warmup() {
+        let signal: &[f32] = &[1.0; 64];
+        let dft = signal.real_fft();
+        let mut output = vec![0.0f32; 64];
+        // Warmup
+        dft.real_ifft_using(&mut output);
+        assert_no_alloc(|| {
+            dft.real_ifft_using(&mut output);
+        });
     }
 }
