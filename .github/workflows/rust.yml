@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Build
       run: cargo build --verbose
     - name: Run tests
@@ -24,7 +24,20 @@ jobs:
       run: cargo build --no-default-features --verbose
     - name: Test (no default features)
       run: cargo test --no-default-features --verbose
-    - name: Build (all features)
+    - name: Build (fallible + serde)
+      run: cargo build --features fallible,serde --verbose
+    - name: Test (fallible + serde)
+      run: cargo test --features fallible,serde --verbose
+
+  build-nightly:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Install nightly
+      uses: dtolnay/rust-toolchain@nightly
+    - name: Build (const-realfft, nightly)
       run: cargo build --all-features --verbose
-    - name: Test (all features)
+    - name: Test (const-realfft, nightly)
       run: cargo test --all-features --verbose
